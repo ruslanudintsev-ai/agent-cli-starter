@@ -151,6 +151,25 @@ class HealthDemoCommand(BaseCommand):
             self.assertIn("_system_health_warning", failure)
             self.assertNotIn("Do not expose", broken.stdout)
 
+    def test_force_upgrade_preserves_project_memories(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self.assertEqual(invoke(str(REPO / "setup_starter_kit.py"), cwd=root).returncode, 0)
+            original = {
+                ".agents/skills/cli-tools/gotchas.md": "private, verified gotcha\n",
+                ".agents/skills/cli-tools/recipes.md": "private, tested recipe\n",
+                ".agents/backlog/cli-features.md": "private project backlog\n",
+            }
+            for filename, content in original.items():
+                (root / filename).write_text(content, encoding="utf-8")
+            result = invoke(str(REPO / "setup_starter_kit.py"), "--force", "--json", cwd=root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            data = json.loads(result.stdout)
+            for filename, content in original.items():
+                self.assertEqual((root / filename).read_text(encoding="utf-8"), content)
+                self.assertIn(filename, data["skipped"])
+            self.assertIn("core/commands/base.py", data["overwritten"])
+
     def test_generated_skill_is_not_manual_memory_store(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

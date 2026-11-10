@@ -147,7 +147,7 @@ GitHub Actions runs the tests on Ubuntu and Windows for Python 3.10, 3.11 and 3.
 
 ## Self-improvement without leaking project context
 
-The template includes a persistent command-authoring rule, a `self-improvement` skill, a manually maintained `cli-tools/recipes.md` and a project-local `.agents/backlog/cli-features.md`. Agents can suggest durable improvements and record only tested workflows. `system-docgen` changes the generated command reference, not personal notes. No automated background agent or model-weight training is implied.
+The template includes a persistent command-authoring rule, a `self-improvement` skill, a manually maintained `cli-tools/recipes.md` and a project-local `.agents/backlog/cli-features.md`. Agents can suggest durable improvements and record only tested workflows. `system-docgen` changes the generated command reference, not personal notes. Existing `gotchas.md`, `recipes.md` and `.agents/backlog/cli-features.md` are preserved even when upgrading with installer `--force`. No automated background agent or model-weight training is implied.
 
 Long-running project commands can optionally use `from core.state import CheckpointStore` for private, TTL-limited checkpoints; the CLI provides metadata-only listing and a read-only expiry preview by default. Restore/resume logic is never automatic; each command must validate its own state and request appropriate authorization.
 

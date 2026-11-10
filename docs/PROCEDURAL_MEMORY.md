@@ -26,3 +26,7 @@ Memory created inside a target project may expose its infrastructure, users or b
 ## Limitations
 
 This is a workflow contract, not an automated incident-recovery service. The framework supplies agent instructions and a place for evidence, but cannot enforce that arbitrary models follow instructions. Do not treat a documented command recommendation as a command that is already implemented or authorized to run.
+
+## Upgrade safety
+
+The installer deliberately skips pre-existing project-local `gotchas.md`, `recipes.md` and `.agents/backlog/cli-features.md` even under `--force`. These files are operational knowledge, not distributable program code. Updating the template must not erase previously verified local lessons.
