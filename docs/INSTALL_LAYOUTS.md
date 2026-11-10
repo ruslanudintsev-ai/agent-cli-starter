@@ -29,6 +29,6 @@ Do not call Django's `manage.py` in place of the CLI. A foreign pre-existing dir
 
 ## Meaningful outcomes
 
-**PLANNED** means only `--dry-run` was done. **INSTALLED** requires successful file placement, a real CLI execution and unchanged foreign application sources. **AGENT_VERIFIED** requires observing the agent discover and use the installed rules/CLI in a new permitted task. A passing install is not proof that new feature behavior is correct; that requires independent acceptance.
+**PLANNED** means only `--dry-run` was done. **FILES_INSTALLED** is the installer's state after placing the files and regenerating docs; **INSTALLED** requires successful file placement, a real CLI execution and unchanged foreign application sources. **AGENT_VERIFIED** requires observing the agent discover and use the installed rules/CLI in a new permitted task. A passing install is not proof that new feature behavior is correct; that requires independent acceptance.
 
 Agent-specific configuration files are optional compatibility adapters, not separate runtimes. Reopen an agent session if project instructions are snapshotted at session start.
