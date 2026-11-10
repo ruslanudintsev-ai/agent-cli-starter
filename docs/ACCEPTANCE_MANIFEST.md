@@ -1,8 +1,8 @@
 # Pinned acceptance manifest example
 
-This is a generic, **illustrative** contract for a CLI command named \`audit-demo\`, not a built-in auditor. Save JSON below as an independently reviewed file; keep the reference hash and fixtures under reviewer control.
+This is a generic, **illustrative** contract for a CLI command named `audit-demo`, not a built-in auditor. Save JSON below as an independently reviewed file; keep the reference hash and fixtures under reviewer control.
 
-\`\`\`json
+```json
 {
   "schema_version": 1,
   "task_id": "audit_demo",
@@ -30,16 +30,16 @@ This is a generic, **illustrative** contract for a CLI command named \`audit-dem
     }
   ]
 }
-\`\`\`
+```
 
-Values are exact. The CLI will execute \`python <entrypoint> <argv...> --json\` in the project root. If a defect is ignored or test data changed, verification fails. The CLI does not execute bare manifest shell commands.
+Values are exact. The CLI will execute `python <entrypoint> <argv...> --json` in the project root. If a defect is ignored or test data changed, verification fails. The CLI does not execute bare manifest shell commands.
 
 Run after an external reviewer has frozen the manifest and its hash:
 
-\`\`\`bash
+```bash
 python manage.py verify-acceptance --manifest /reviewed/acceptance.json --sha256 <reviewer-trusted-64-hex> --execute --json
-\`\`\`
+```
 
-In a target project where the starter picked \`agent_cli.py\`, use that entrypoint instead. Do not run untrusted project plugins or tests on a privileged machine.
+In a target project where the starter picked `agent_cli.py`, use that entrypoint instead. Do not run untrusted project plugins or tests on a privileged machine.
 
-The \`VERIFIED\` state says only that the named, frozen cases matched the outputs at that point. The verifier and acceptance contract remain vulnerable to someone who controls the implementation **and** can replace the reviewed manifest/digest. There is no cryptographic signature, capability isolation or sandbox in this version.
+The `VERIFIED` state says only that the named, frozen cases matched the outputs at that point. The verifier and acceptance contract remain vulnerable to someone who controls the implementation **and** can replace the reviewed manifest/digest. There is no cryptographic signature, capability isolation or sandbox in this version.
