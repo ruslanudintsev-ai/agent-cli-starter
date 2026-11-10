@@ -15,8 +15,8 @@ This public roadmap separates existing behavior from prospective improvements.
 ## Candidates, not shipped features
 
 - A project-local, opt-in command catalog with reviewed, stack-specific implementations.
-- Atomic state writes (`os.replace`) and locking where multi-writer coordination is needed.
-- Structured checkpoint expiry and safe recovery contracts for long-running tasks.
+- Distributed or cross-host coordination beyond the shipped cooperative single-project checkpoint lock.
+- Project-specific resume validation and crash recovery contracts for long-running tasks (basic checkpoint TTL is shipped; automatic resume is not).
 - More stringent source-inspection checks and opt-in policy validation.
 - Signed release/artifact verification, beyond immutable Git SHA source references.
 - Journal-based crash recovery if the installer process is forcibly terminated during an update.
