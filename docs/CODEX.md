@@ -13,7 +13,7 @@ Official references: [AGENTS.md](https://learn.chatgpt.com/docs/agent-configurat
 
 ## Installation
 
-Follow the same [universal install and verification steps](../AGENT_SETUP.md) as every other coding agent. Review destination Git/PR rules, use the existing Python installer with `--target` and `--integrate-agents`, perform dry-run first, and verify actual CLI execution. This page adds no Codex-only installer, command or runtime.
+Follow the same [universal install and verification steps](../AGENT_SETUP.md) as every other coding agent. Django-like occupied roots select `tools/agent-cli-starter/` using `--layout auto`; project-owned `manage.py` is preserved. Review destination Git/PR rules, use the existing Python installer with `--target` and `--integrate-agents`, perform dry-run first, and verify actual CLI execution. This page adds no Codex-only installer, command or runtime.
 
 ### Existing AGENTS.md
 

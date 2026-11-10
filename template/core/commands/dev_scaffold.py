@@ -24,8 +24,16 @@ class DevScaffoldCommand(BaseCommand):
             return {"status": "error", "message": "Command must be lowercase kebab-case"}
         module = name.replace("-", "_")
         classname = "".join(part.title() for part in name.split("-")) + "Command"
-        source = Path("core/commands") / f"{module}.py"
-        test = Path("tests") / f"test_{module}.py"
+        # Always write into the installed runtime, never an application's own core/.
+        runtime_root = Path(__file__).resolve().parents[2]
+        project_root = Path.cwd().resolve()
+        source_file = Path(__file__).resolve().parent / f"{module}.py"
+        test_file = runtime_root / "tests" / f"test_{module}.py"
+        try:
+            source = source_file.relative_to(project_root)
+            test = test_file.relative_to(project_root)
+        except ValueError:
+            return {"status": "error", "message": "Run CLI from destination project root"}
         if source.exists() or test.exists():
             return {"status": "error", "message": "Module or test already exists", "files": [str(source), str(test)]}
         code = f'''"""Reusable {name} CLI command."""
@@ -67,12 +75,13 @@ class {classname}Tests(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 '''
-        source.parent.mkdir(parents=True, exist_ok=True)
-        test.parent.mkdir(parents=True, exist_ok=True)
-        source.write_text(code, encoding="utf-8", errors="strict")
-        test.write_text(test_code, encoding="utf-8", errors="strict")
+        source_file.parent.mkdir(parents=True, exist_ok=True)
+        test_file.parent.mkdir(parents=True, exist_ok=True)
+        source_file.write_text(code, encoding="utf-8", errors="strict")
+        test_file.write_text(test_code, encoding="utf-8", errors="strict")
         return {"status": "ok", "command": name, "files": [str(source), str(test)],
                 "feature_state": "SCAFFOLDED", "verification_state": "UNVERIFIED",
                 "message": "Scaffold created; not functional and not accepted. Implement logic and both behavior tests.",
                 "next": [f"dev-validate --file {source}",
-                         f"python -m unittest tests.test_{module} -v", "system-docgen"]}
+                         f"python -m unittest discover -s {test.parent.as_posix()} -p test_{module}.py -v",
+                         "system-docgen"]}

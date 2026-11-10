@@ -17,6 +17,32 @@ Install into the **destination project root**, not a nested `.agents/agent-cli-s
 
 Existing project instructions are preserved. With `--integrate-agents`, a small managed reference is appended to an existing `AGENTS.md` without discarding its rules. Agent-specific overrides and discovery can vary: merely installing files does not prove any given agent has read them. See optional [agent compatibility notes](docs/CODEX.md) and [Kilo smoke test](docs/KILO_CODE.md) as examples, not alternate installers.
 
+## Universal installation layout
+
+The **same Python installer and CLI contract** work with every supported coding agent.
+
+| Layout | Runtime location | Use |
+| --- | --- | --- |
+| `--layout auto` (default) | Flat for new empty projects; isolated for occupied roots | Recommended; preserves existing installations |
+| `--layout isolated` | `tools/agent-cli-starter/manage.py` | Django, monorepos, projects with their own `core/`, `src/` or `manage.py` |
+| `--layout flat` | `manage.py` or `agent_cli.py` | Legacy compatibility where root layout is acceptable |
+
+**Only the runtime is isolated.** Project-root `AGENTS.md` and `.agents/` remain discoverable. For an existing project, install from a reviewed starter checkout:
+
+```bash
+python setup_starter_kit.py --target /path/to/project --layout auto --integrate-agents --dry-run --json
+python setup_starter_kit.py --target /path/to/project --layout auto --integrate-agents --json
+```
+
+Inspect the returned `layout`, `entrypoint`, `commands_dir`, `planned_created`, `planned_overwritten` and `skipped`. The chosen CLI is launched from the **destination project root**. On an isolated Django-like project:
+
+```bash
+python tools/agent-cli-starter/manage.py sys-info --json
+python tools/agent-cli-starter/manage.py project-scan --json
+```
+
+The application's own `manage.py`, `src/`, `core/` and tests remain untouched. An unrelated existing `tools/agent-cli-starter/` tree is an installation error even with `--force`. Read the [universal layout contract](docs/INSTALL_LAYOUTS.md).
+
 ## Quick install
 
 Open a terminal in the **target project directory** (not this starter repository).
@@ -80,7 +106,7 @@ python manage.py verify-acceptance --manifest acceptance.json --sha256 REVIEWED_
 python -m unittest discover -s tests -v
 ```
 
-If the project already has a **foreign** `manage.py` (including Django), the starter creates **`agent_cli.py`** instead and patches generated instructions. Existing files are not overwritten without `--force`; even `--force` never replaces a foreign `manage.py`.
+For explicit `--layout flat`, a foreign `manage.py` triggers the legacy `agent_cli.py` fallback. With the default `--layout auto`, such a project uses `tools/agent-cli-starter/manage.py` instead. Existing files are not overwritten without `--force`; even `--force` never replaces a foreign `manage.py`.
 
 ```bash
 python agent_cli.py sys-info --json
@@ -139,6 +165,7 @@ This repository contains only generic, publication-safe source, instructions and
 - `--dry-run` lists planned creates, overwrites and skips without touching the destination.
 - `--ref <full-Git-commit-SHA>` pins fetched installer/templates; the default `main` is mutable.
 - A normal installation snapshots files it will change and restores them on an observed failure. Rollback does not cover third-party side effects, abrupt termination or a changed target from another concurrent process.
+- Selects a non-conflicting flat or isolated runtime with `--layout auto`; returns the exact CLI entrypoint.
 - Skips existing files without `--force` and idempotently appends `.cle_state/`, `.cle_cache/` and `__pycache__/` to `.gitignore`.
 - Generates `SKILL.md` immediately; on later installs, when an existing `SKILL.md` is preserved, runs doc generation in dry-run mode instead of overwriting it.
 - **Heads-up:** in a project that already uses `core/commands`, non-overwrite mode may leave collisions. Review `skipped` in the installer JSON, and resolve manually before relying on the CLI. Take backups before using `--force`; this is not a fully isolated plugin sandbox.

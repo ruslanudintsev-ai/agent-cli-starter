@@ -46,6 +46,8 @@ if [[ -f manage.py ]] && grep -q '^# AGENT_CLI_STARTER_ENTRYPOINT$' manage.py; t
   ENTRY="manage.py"
 elif [[ -f agent_cli.py ]] && grep -q '^# AGENT_CLI_STARTER_ENTRYPOINT$' agent_cli.py; then
   ENTRY="agent_cli.py"
+elif [[ -f tools/agent-cli-starter/manage.py ]] && grep -q '^# AGENT_CLI_STARTER_ENTRYPOINT$' tools/agent-cli-starter/manage.py; then
+  ENTRY="tools/agent-cli-starter/manage.py"
 else
   printf '%s\n' 'Error: starter entrypoint could not be located.' >&2; exit 1
 fi

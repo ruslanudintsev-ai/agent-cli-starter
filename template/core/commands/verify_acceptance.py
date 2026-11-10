@@ -22,7 +22,7 @@ from core.commands.base import BaseCommand
 SHA_PATTERN = re.compile(r"[a-fA-F0-9]{64}\Z")
 ID_PATTERN = re.compile(r"[a-z][a-z0-9_-]{0,63}\Z")
 FIELD_PATTERN = re.compile(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*){0,5}\Z")
-SOURCE_PATTERN = re.compile(r"core/commands/[a-z][a-z0-9_]*\.py\Z")
+SOURCE_PATTERN = re.compile(r"[a-z][a-z0-9_]*\.py\Z")
 DISALLOWED_COMMANDS = frozenset(("verify-acceptance", "dev-scaffold", "system-docgen", "checkpoints"))
 MAX_MANIFEST_BYTES = 65536
 MAX_CASES = 20
@@ -73,7 +73,8 @@ def _expect_name(value: Any) -> str:
     return value
 
 
-def _validate_manifest(root: Path, value: dict[str, Any]) -> tuple[str, list[dict[str, Any]], dict[str, Path]]:
+def _validate_manifest(root: Path, value: dict[str, Any],
+                       entrypoint: str) -> tuple[str, list[dict[str, Any]], dict[str, Path]]:
     if set(value) != {"schema_version", "task_id", "criteria_version", "command", "source", "fixtures", "cases"}:
         _fail("invalid_manifest_keys")
     if type(value["schema_version"]) is not int or value["schema_version"] != 1:
@@ -84,7 +85,10 @@ def _validate_manifest(root: Path, value: dict[str, Any]) -> tuple[str, list[dic
     if command in DISALLOWED_COMMANDS:
         _fail("disallowed_target_command")
     source = value["source"]
-    if not isinstance(source, str) or not SOURCE_PATTERN.fullmatch(source):
+    expected_dir = (PurePosixPath(entrypoint).parent / "core" / "commands").as_posix()
+    if (not isinstance(source, str)
+            or PurePosixPath(source).parent.as_posix() != expected_dir
+            or not SOURCE_PATTERN.fullmatch(PurePosixPath(source).name)):
         _fail("invalid_source_path")
     sources = {"source": _relative_file(root, source)}
     fixtures = value["fixtures"]
@@ -218,7 +222,8 @@ class VerifyAcceptanceCommand(BaseCommand):
             if manifest_hash != args.sha256.lower():
                 _fail("manifest_hash_mismatch")
             manifest = _checked_json_object(raw)
-            command, cases, checked_files = _validate_manifest(root, manifest)
+            entrypoint = getattr(args, "_entrypoint", "manage.py")
+            command, cases, checked_files = _validate_manifest(root, manifest, entrypoint)
             before = {key: _digest(file.read_bytes()) for key, file in checked_files.items()}
             before["manifest"] = _digest(path.read_bytes())
         except (ContractFailure, OSError, UnicodeError, TypeError) as exc:
@@ -235,7 +240,6 @@ class VerifyAcceptanceCommand(BaseCommand):
         if not args.execute:
             return {**proof, "status": "error", "verification_state": "UNVERIFIED",
                     "reason": "explicit_execution_required"}
-        entrypoint = getattr(args, "_entrypoint", "manage.py")
         outcomes: list[dict[str, Any]] = []
         for case in cases:
             outcomes.append(_run_case(root, entrypoint, case, args.timeout))

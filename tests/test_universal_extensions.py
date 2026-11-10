@@ -31,7 +31,7 @@ class ExtensionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / "manage.py").write_text("# foreign owner\n", encoding="utf-8")
-            outcome = invoke(str(REPO / "setup_starter_kit.py"), cwd=root)
+            outcome = invoke(str(REPO / "setup_starter_kit.py"), "--layout", "flat", cwd=root)
             self.assertEqual(outcome.returncode, 0, outcome.stderr)
             for relative in (
                 ".agents/skills/self-improvement/SKILL.md",
