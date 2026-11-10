@@ -83,7 +83,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     args._subparsers = subparsers
     args._discovery_warnings = warnings
-    args._entrypoint = Path(__file__).name
+    script = Path(__file__).resolve()
+    try:
+        args._entrypoint = script.relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        args._entrypoint = script.name
     command = commands.get(args._command_name)
     if command is None:
         parser.error("Unknown or unavailable command")

@@ -53,6 +53,8 @@ TEMPLATE_FILES = (
     "manage.py",
 )
 IGNORE_LINES = (".cle_state/", ".cle_cache/", "__pycache__/")
+ISOLATED_PREFIX = "tools/agent-cli-starter"
+VALID_LAYOUTS = ("auto", "flat", "isolated")
 # User-earned operational knowledge is never overwritten, even with --force.
 PRESERVE_USER_NOTES = frozenset((
     ".agents/skills/cli-tools/gotchas.md",
@@ -99,6 +101,32 @@ def select_entrypoint(target: Path) -> str:
         if not _is_ours(alternate):
             raise ValueError("Both manage.py and agent_cli.py are occupied; refusing to overwrite either")
     return "agent_cli.py"
+
+
+def choose_layout(target: Path, requested: str) -> str:
+    """Preserve existing installs and isolate occupied project roots."""
+    if requested not in VALID_LAYOUTS:
+        raise ValueError("Invalid layout")
+    if requested != "auto":
+        return requested
+    if _is_ours(target / "manage.py") or _is_ours(target / "agent_cli.py"):
+        return "flat"
+    if _is_ours(target / ISOLATED_PREFIX / "manage.py"):
+        return "isolated"
+    if any((target / marker).exists() for marker in
+           ("manage.py", "agent_cli.py", "core", "src", "app", "pyproject.toml", "package.json")):
+        return "isolated"
+    return "flat"
+
+
+def isolated_entrypoint(target: Path) -> str:
+    """Refuse to merge with a foreign tools/agent-cli-starter tree."""
+    directory = target / ISOLATED_PREFIX
+    if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
+        raise ValueError("Isolated CLI destination is not a safe directory")
+    if directory.exists() and any(directory.iterdir()) and not _is_ours(directory / "manage.py"):
+        raise ValueError("Isolated CLI destination occupied by unrelated files")
+    return f"{ISOLATED_PREFIX}/manage.py"
 
 
 def load_templates(revision: str) -> dict[str, str]:
@@ -148,19 +176,31 @@ def gitignore_content(path: Path) -> tuple[bytes | None, list[str]]:
 
 
 def make_plan(target: Path, *, force: bool, revision: str,
-              integrate_agents: bool = False) -> tuple[dict[str, object], list[Change], list[Change]]:
+              integrate_agents: bool = False,
+              layout: str = "auto") -> tuple[dict[str, object], list[Change], list[Change]]:
     """Build an inspection-ready action plan without changing the target."""
     target = target.expanduser().resolve()
     if not target.is_dir() or target == Path(target.anchor):
         raise ValueError("--target must be an existing project directory, not filesystem root")
     revision = checked_revision(revision)
-    entrypoint = select_entrypoint(target)
+    selected_layout = choose_layout(target, layout)
+    entrypoint = (select_entrypoint(target) if selected_layout == "flat"
+                  else isolated_entrypoint(target))
+    commands_dir = ("core/commands" if selected_layout == "flat"
+                    else f"{ISOLATED_PREFIX}/core/commands")
+    tests_dir = ("tests" if selected_layout == "flat"
+                 else f"{ISOLATED_PREFIX}/tests")
     templates = load_templates(revision)  # complete all network reads before writing
     writes: list[Change] = []
     skipped: list[str] = []
     guidance_state = "new_file"
     for relative, content in templates.items():
-        filename = entrypoint if relative == "manage.py" else relative
+        if relative == "manage.py":
+            filename = entrypoint
+        elif selected_layout == "isolated" and relative.startswith("core/"):
+            filename = f"{ISOLATED_PREFIX}/{relative}"
+        else:
+            filename = relative
         destination = checked_path(target, filename)
         if filename == "AGENTS.md" and destination.exists():
             # Existing project policies are never replaced, even with --force.
@@ -179,7 +219,10 @@ def make_plan(target: Path, *, force: bool, revision: str,
         if destination.exists() and (not force or filename in PRESERVE_USER_NOTES):
             skipped.append(filename)
             continue
-        writes.append(Change(filename, destination, content.replace("__ENTRYPOINT__", entrypoint).encode("utf-8"), destination.exists()))
+        rendered = (content.replace("__ENTRYPOINT__", entrypoint)
+                    .replace("__COMMANDS_DIR__", commands_dir)
+                    .replace("__TESTS_DIR__", tests_dir))
+        writes.append(Change(filename, destination, rendered.encode("utf-8"), destination.exists()))
     gi = checked_path(target, ".gitignore")
     updated_ignore, added = gitignore_content(gi)
     extra = [Change(".gitignore", gi, updated_ignore, gi.exists())] if updated_ignore is not None else []
@@ -187,6 +230,9 @@ def make_plan(target: Path, *, force: bool, revision: str,
         "status": "ok",
         "source_revision": revision,
         "entrypoint": entrypoint,
+        "layout": selected_layout,
+        "commands_dir": commands_dir,
+        "tests_dir": tests_dir,
         "planned_created": [c.relative for c in writes + extra if not c.existed],
         "planned_overwritten": [c.relative for c in writes + extra if c.existed],
         "skipped": skipped,
@@ -270,12 +316,13 @@ def _restore(journal: list[tuple[Path, Path | None, int | None]], created_dirs: 
 
 
 def install(target: Path, force: bool = False, dry_run: bool = False,
-            revision: str = "main", integrate_agents: bool = False) -> dict[str, object]:
+            revision: str = "main", integrate_agents: bool = False,
+            layout: str = "auto") -> dict[str, object]:
     if sys.version_info < (3, 10):
         raise RuntimeError("Python 3.10+ is required")
     root = target.expanduser().resolve()
     plan, writes, extra = make_plan(root, force=force, revision=revision,
-                                   integrate_agents=integrate_agents)
+                                   integrate_agents=integrate_agents, layout=layout)
     if dry_run:
         return {**plan, "dry_run": True, "created": [], "overwritten": [], "gitignore_updated": False}
 
@@ -329,6 +376,8 @@ def install(target: Path, force: bool = False, dry_run: bool = False,
 def main() -> int:
     parser = argparse.ArgumentParser(description="Safely install reusable zero-dependency agent CLI")
     parser.add_argument("--target", type=Path, default=Path.cwd(), help="Existing destination project")
+    parser.add_argument("--layout", choices=VALID_LAYOUTS, default="auto",
+                        help="auto: isolate occupied roots, preserve existing installations; flat: legacy; isolated: tools/ runtime")
     parser.add_argument("--force", action="store_true", help="Replace existing starter files (never foreign entrypoints or existing AGENTS.md)")
     parser.add_argument("--integrate-agents", action="store_true",
                         help="Append managed CLI guidance to existing root AGENTS.md without replacing its rules")
@@ -338,7 +387,8 @@ def main() -> int:
     args = parser.parse_args()
     try:
         outcome = install(args.target, force=args.force, dry_run=args.dry_run,
-                          revision=args.ref, integrate_agents=args.integrate_agents)
+                          revision=args.ref, integrate_agents=args.integrate_agents,
+                          layout=args.layout)
         if args.json:
             sys.stdout.write(json.dumps(outcome, ensure_ascii=False) + "\n")
         elif args.dry_run:
