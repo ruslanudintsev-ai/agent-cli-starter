@@ -49,10 +49,16 @@ class IsolatedLayoutTests(unittest.TestCase):
         )}
         preview = self.install("--dry-run", "--integrate-agents")
         self.assertEqual(preview["layout"], "isolated")
+        self.assertEqual(preview["installation_state"], "PLANNED")
+        self.assertEqual(preview["agent_adoption_state"], "UNVERIFIED")
         self.assertEqual(preview["entrypoint"], ENTRY)
         self.assertIn("tools/agent-cli-starter/core/commands/base.py", preview["planned_created"])
         self.assertFalse((self.root / "tools").exists())
-        self.install("--integrate-agents")
+        applied = self.install("--integrate-agents")
+        self.assertEqual(applied["installation_state"], "FILES_INSTALLED")
+        self.assertEqual(applied["agent_adoption_state"], "UNVERIFIED")
+        self.assertEqual(applied["next_verification_commands"][0],
+                         f"python {ENTRY} sys-info --json")
         for rel, content in before.items():
             self.assertEqual((self.root / rel).read_bytes(), content)
         self.assertTrue((self.root / ENTRY).is_file())
