@@ -9,13 +9,13 @@
 
 Instead of writing `temp.py`, `script_v1.py` and dumping unlimited logs into a model context, agents can extend a reusable Python CLI with explicit parameters, bounded JSON results, tests, and persistent operational notes.
 
-## Install into an existing project (Codex and other coding agents)
+## Install into an existing project — any coding agent
 
-**Do not nest this repository under `.agents/agent-cli-starter`.** Run its installer with the target **project root** as `--target`. The installer places `AGENTS.md` (if absent), `.agents/rules/`, `.agents/skills/` and the CLI at the correct relative paths. Codex reads project-root `AGENTS.md` and discovers repository Agent Skills from `.agents/skills/` (see [Codex setup](docs/CODEX.md)).
+**Start with the [universal agent setup contract](AGENT_SETUP.md).** It is the single source of truth for installation, discovery and verification regardless of Codex, Kilo, Cursor, Claude Code, Aider or other agents.
 
-**For existing `AGENTS.md`:** the installer preserves the entire file, even with `--force`. After reviewing the dry-run, use `--integrate-agents` to append a small, marked CLI reference without replacing project rules. An existing `AGENTS.override.md` may take precedence in Codex and needs separate review. Reopen Codex after installation to ensure it loads the new instructions.
+Install into the **destination project root**, not a nested `.agents/agent-cli-starter` directory. From a reviewed starter checkout, preview `python setup_starter_kit.py --target /path/to/project --integrate-agents --dry-run --json`, inspect every planned create/overwrite/skip, then apply without `--dry-run` only where the destination project's branch/PR rules allow it. Run the reported CLI entrypoint and verify output. Report actual state (`PLANNED`, `INSTALLED`, `AGENT_VERIFIED`, `BLOCKED`) and evidence.
 
-For coding agents: inspect the target repository's workflow rules, then install from a reviewed checkout using `--target <project-root> --dry-run --integrate-agents --json`, apply the same options without `--dry-run` on a permitted branch, run the installed CLI, and report what actually changed. Do not invent a new layout or claim installation from reading the README. Follow target repository's PR process if required.
+Existing project instructions are preserved. With `--integrate-agents`, a small managed reference is appended to an existing `AGENTS.md` without discarding its rules. Agent-specific overrides and discovery can vary: merely installing files does not prove any given agent has read them. See optional [agent compatibility notes](docs/CODEX.md) and [Kilo smoke test](docs/KILO_CODE.md) as examples, not alternate installers.
 
 ## Quick install
 
@@ -112,6 +112,9 @@ python agent_cli.py sys-info --json
 The template includes a first-use `.agents/rules/agent-onboarding.md` instruction. In a new project run `project-scan`, inspect the output and implement only the commands justified by an actual task. The scanner is shallow, deliberately avoids `.env` and private directories, and never runs user code.
 
 ## Integration with agents
+
+The portable interface is the shared [agent setup contract](AGENT_SETUP.md), `AGENTS.md` and `.agents/skills/`; the following files only tell different agents where to find the **same** CLI and rules. There is no separate runtime per model or vendor.
+
 
 - **Antigravity / agents supporting `.agents/`** — three `always_on` rules under `.agents/rules/`.
 - **Cursor** — `.cursor/rules/agent-cli.mdc` includes an `alwaysApply` reference to the rules.

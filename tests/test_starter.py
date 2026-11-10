@@ -24,6 +24,20 @@ def invoke(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
 
 
 class InstallTests(unittest.TestCase):
+
+    def test_canonical_agent_setup_is_vendor_independent(self) -> None:
+        guide = (REPO / "AGENT_SETUP.md").read_text(encoding="utf-8")
+        readme = (REPO / "README.md").read_text(encoding="utf-8")
+        root_rules = (REPO / "AGENTS.md").read_text(encoding="utf-8")
+        project_rules = (REPO / "template/AGENTS.md").read_text(encoding="utf-8")
+        for token in ("--integrate-agents", "--dry-run", "AGENT_VERIFIED",
+                      "project-scan", "SCAFFOLDED", "AGENTS.md"):
+            self.assertIn(token, guide)
+        self.assertIn("AGENT_SETUP.md", readme)
+        self.assertIn("AGENT_SETUP.md", root_rules)
+        self.assertIn("vendor-independent", project_rules)
+        self.assertNotIn("docs/CODEX.md", root_rules)
+
     def test_install_and_json_arguments(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
