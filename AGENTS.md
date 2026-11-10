@@ -1,9 +1,9 @@
-# Agent CLI Starter — source repository guidance
+# Agent CLI Starter — universal source repository guidance
 
-This is a reusable **installer source**, not a target project. If a user asks to install this framework into another project, first identify the target checkout root; do not create a nested `.agents/agent-cli-starter` folder. Preserve the target project's own rules, CI flow, branches and files.
+This repository is the **shared source and installer**, not a destination project.
 
-Read `README.md`, `docs/CODEX.md` and `setup_starter_kit.py`. The installer already places `AGENTS.md`, `.agents/rules/`, `.agents/skills/` and the CLI at the destination root. Preview with `--target <project-root> --integrate-agents --dry-run --json` from a reviewed checkout, then apply on a permitted branch and run real smoke commands. Report observed evidence, not assumed installation.
+**Canonical instructions for all coding agents:** read [AGENT_SETUP.md](AGENT_SETUP.md), `README.md`, and `setup_starter_kit.py` before installing in another repository. Do not invent a nested `.agents/agent-cli-starter` layout or a new installer per agent. Identify the real destination root, respect its existing project rules and Git branch/PR workflow, and use the reviewed installer with `--dry-run` before applying.
 
-If the target already has `AGENTS.md`, do not replace it: the explicit `--integrate-agents` option appends a reviewable managed reference. Do not modify `AGENTS.override.md` automatically. Respect project Git workflow rules; a PR may be needed, but do not mistake planning a PR for completing the user's requested work.
+If the destination has an `AGENTS.md`, preserve it and use `--integrate-agents` only after inspecting the resulting changes. Follow the documented cross-agent verification protocol: file placement and CLI execution are not proof of automatic instruction discovery or feature correctness.
 
-Never leak destination project secrets, private notes, absolute paths or account details into this public upstream repository. Tests and documentation should remain project-agnostic. Do not claim a scaffold passes behavioral acceptance without real positive and negative cases.
+Never copy destination-project secrets, personal files or private notes into this public repository. Do not claim a scaffold is fully implemented merely because AST or smoke tests pass. Model-specific instructions are optional compatibility notes, not the architecture.

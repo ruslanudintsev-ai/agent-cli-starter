@@ -1,5 +1,7 @@
 # Kilo Code compatibility
 
+**Canonical for every agent:** [Universal agent setup](../AGENT_SETUP.md). The steps below are experimental Kilo-specific observations, not a second installer or a separate runtime.
+
 The starter is a Python control-plane with standard `AGENTS.md` instructions and Agent Skills. It does **not** depend on Kilo-specific APIs, configurations or model providers.
 
 ## Discovery
