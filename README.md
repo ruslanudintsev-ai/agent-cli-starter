@@ -99,6 +99,7 @@ python agent_cli.py sys-info --json
 - [Universality and safety boundaries](docs/UNIVERSALITY.md) — implemented controls versus deliberately omitted project-specific features.
 - [Roadmap](docs/ROADMAP.md) — shipped behavior versus ideas that still need implementation.
 - [Procedural memory protocol](docs/PROCEDURAL_MEMORY.md) — verified lessons, review scope, privacy and limits.
+- [Reliability Core](docs/RELIABILITY.md) — scaffold is not success; failing acceptance placeholders and Grounding Proof.
 
 The template includes a first-use `.agents/rules/agent-onboarding.md` instruction. In a new project run `project-scan`, inspect the output and implement only the commands justified by an actual task. The scanner is shallow, deliberately avoids `.env` and private directories, and never runs user code.
 

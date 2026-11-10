@@ -42,6 +42,11 @@ class DevValidateCommand(BaseCommand):
         ]
         if not inheritors:
             errors.append("No class inheriting BaseCommand")
+        # An untouched generated scaffold is structurally parseable but not implemented.
+        # This is a narrow diagnostic, NOT a proof that a marker-free module is correct.
+        if any(isinstance(node, ast.Constant) and node.value == "NOT_IMPLEMENTED"
+               for node in ast.walk(tree)):
+            errors.append("Unimplemented scaffold: NOT_IMPLEMENTED marker remains")
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "print":
                 errors.append(f"Line {node.lineno}: direct print() is forbidden; return a mapping")
@@ -51,4 +56,6 @@ class DevValidateCommand(BaseCommand):
                 if required not in methods:
                     errors.append(f"{cls.name}: missing method {required}()")
         return {"status": "ok" if not errors else "error", "file": str(path.relative_to(root)),
-                "valid": not errors, "classes": [item.name for item in inheritors], "errors": errors}
+                "valid": not errors, "classes": [item.name for item in inheritors],
+                "scope": "Static structure only; behavior requires independent positive and negative acceptance tests",
+                "behavior_verified": False, "errors": errors}

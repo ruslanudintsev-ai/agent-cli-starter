@@ -87,17 +87,25 @@ class InstallTests(unittest.TestCase):
             self.assertEqual(invoke(str(INSTALLER), cwd=root).returncode, 0)
             generated = invoke("manage.py", "dev-scaffold", "--command", "hello-world", "--json", cwd=root)
             self.assertEqual(generated.returncode, 0, generated.stdout + generated.stderr)
+            record = json.loads(generated.stdout)["result"]
+            self.assertEqual(record["feature_state"], "SCAFFOLDED")
+            self.assertEqual(record["verification_state"], "UNVERIFIED")
             validated = invoke("manage.py", "dev-validate", "--file",
                                "core/commands/hello_world.py", "--json", cwd=root)
-            self.assertEqual(validated.returncode, 0, validated.stdout + validated.stderr)
+            self.assertNotEqual(validated.returncode, 0, validated.stdout + validated.stderr)
+            self.assertIn("NOT_IMPLEMENTED", validated.stdout)
             docgen = invoke("manage.py", "system-docgen", "--json", cwd=root)
             self.assertEqual(docgen.returncode, 0, docgen.stdout + docgen.stderr)
             skill = (root / ".agents/skills/cli-tools/SKILL.md").read_text(encoding="utf-8")
             self.assertIn("hello-world", skill)
             run = invoke("manage.py", "hello-world", "--dry-run", "--json", cwd=root)
-            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            self.assertNotEqual(run.returncode, 0, run.stdout + run.stderr)
+            self.assertEqual(json.loads(run.stdout)["result"]["error_code"], "NOT_IMPLEMENTED")
             tests = invoke("-m", "unittest", "discover", "-s", "tests", "-v", cwd=root)
-            self.assertEqual(tests.returncode, 0, tests.stdout + tests.stderr)
+            self.assertNotEqual(tests.returncode, 0, tests.stdout + tests.stderr)
+            self.assertIn("test_positive_behavior", tests.stdout + tests.stderr)
+            self.assertIn("test_negative_behavior", tests.stdout + tests.stderr)
+            self.assertIn("UNVERIFIED", tests.stdout + tests.stderr)
 
     def test_project_scan_is_read_only_and_sanitized(self) -> None:
         with tempfile.TemporaryDirectory() as folder:

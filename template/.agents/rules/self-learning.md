@@ -22,6 +22,15 @@ The agent retains *operational knowledge*, not hidden thoughts or unfiltered log
 5. **Synchronize the reference.** If arguments or commands changed, run `python __ENTRYPOINT__ system-docgen --json` and check the generated SKILL.md. Run `dev-validate` and relevant tests for new commands.
 6. **Close the loop.** Report what changed, what was tested and any limits. Recheck the recorded workaround when the stack/version changes; correct or retire stale notes.
 
+## Grounding Proof: mandatory completion gate
+
+- Distinguish SCAFFOLDED (template only), IMPLEMENTED (code present, behavior not accepted), VERIFIED (all required pre-agreed behavioral checks passed), FAILED and BLOCKED/UNVERIFIED. Do not report a task as complete when only scaffolding, static AST validation or a smoke test passed.
+- For each material success claim, name the acceptance criterion, actual observation, safe evidence reference (test name and result, file hash/diff or CI link), and verification scope. A hash alone proves byte identity, not functional correctness.
+- Require a reproducible positive case and a negative/counterexample test where meaningful. An agent-authored test that merely checks `status: ok` or changes the oracle after the fact is not an independent verifier.
+- Keep unverified claims explicitly unverified. Never paste raw logs, secrets, cookies, confidential configuration or private paths into public reports; report sanitized evidence identifiers and bounded excerpts only.
+- Treat test changes and reviewer/oracle changes as separate reviewable work. Do not weaken acceptance criteria to obtain a green result. For high-risk tasks run acceptance in a distinct, controlled runner.
+- Model instructions provide discipline, not enforcement; tools and permissions still must enforce safety. See `docs/RELIABILITY.md` in the upstream starter (if present).
+
 ## Privacy boundary
 
 - A destination project's `gotchas.md` can contain sensitive operational context and is **not** automatically suitable for public GitHub.
