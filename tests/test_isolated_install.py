@@ -153,15 +153,14 @@ class CheckDemoCommand(BaseCommand):
         self.assertEqual((self.root / "manage.py").read_bytes(), original)
         self.assertFalse((self.root / "AGENTS.md").exists())
 
-    def test_explicit_flat_retains_legacy_django_fallback(self) -> None:
-        plan = self.install("--layout", "flat", "--dry-run")
-        self.assertEqual(plan["layout"], "flat")
-        self.assertEqual(plan["entrypoint"], "agent_cli.py")
-        applied = self.install("--layout", "flat")
-        self.assertEqual(applied["entrypoint"], "agent_cli.py")
-        result = invoke(self.root, "agent_cli.py", "sys-info", "--json")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(self.install()["layout"], "flat")
+    def test_explicit_flat_rejects_foreign_core_even_with_force(self) -> None:
+        before = (self.root / "core/commands/base.py").read_bytes()
+        result = invoke(self.root, str(INSTALLER), "--layout", "flat", "--force", "--json")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Foreign core/", result.stderr)
+        self.assertEqual((self.root / "core/commands/base.py").read_bytes(), before)
+        self.assertFalse((self.root / "agent_cli.py").exists())
+        self.assertFalse((self.root / "AGENTS.md").exists())
 
     def test_existing_agents_integration_uses_selected_isolated_entrypoint(self) -> None:
         previous = "# Existing application policy\nNo unapproved deploys.\n"
