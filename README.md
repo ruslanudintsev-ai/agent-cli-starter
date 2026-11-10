@@ -5,7 +5,7 @@
 [![Zero dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen)](template/core/commands/base.py)
 [![CI](https://github.com/ruslanudintsev-ai/agent-cli-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/ruslanudintsev-ai/agent-cli-starter/actions/workflows/ci.yml)
 
-**Zero-dependency, cross-platform project command scaffold for coding agents** — Antigravity, Cursor, Claude Code, Aider and tools that support project instruction files.
+**Zero-dependency, cross-platform project command scaffold for coding agents** — Antigravity, Cursor, Claude Code, Kilo Code, Aider and tools that support project instruction files.
 
 Instead of writing `temp.py`, `script_v1.py` and dumping unlimited logs into a model context, agents can extend a reusable Python CLI with explicit parameters, bounded JSON results, tests, and persistent operational notes.
 
@@ -107,6 +107,7 @@ The template includes a first-use `.agents/rules/agent-onboarding.md` instructio
 - **Antigravity / agents supporting `.agents/`** — three `always_on` rules under `.agents/rules/`.
 - **Cursor** — `.cursor/rules/agent-cli.mdc` includes an `alwaysApply` reference to the rules.
 - **Claude Code** — `CLAUDE.md` references the CLI and operational notes.
+- **Kilo Code** — automatically discovers root `AGENTS.md` and the project `.agents/skills/` directory. See [tested Kilo integration](docs/KILO_CODE.md); no platform-specific code is installed.
 - **AGENTS.md readers** — `AGENTS.md` introduces the same conventions.
 - **Aider** — launch with `aider --read AIDER_CONVENTIONS.md` to inject conventions. Aider won't automatically read that file just because it exists.
 
