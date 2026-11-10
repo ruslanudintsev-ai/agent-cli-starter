@@ -220,6 +220,7 @@ class VerifyAcceptanceCommand(BaseCommand):
             manifest = _checked_json_object(raw)
             command, cases, checked_files = _validate_manifest(root, manifest)
             before = {key: _digest(file.read_bytes()) for key, file in checked_files.items()}
+            before["manifest"] = _digest(path.read_bytes())
         except (ContractFailure, OSError, UnicodeError, TypeError) as exc:
             reason = str(exc) if isinstance(exc, ContractFailure) else "contract_unavailable"
             return {"status": "error", "verification_state": "BLOCKED", "reason": reason}
@@ -240,6 +241,7 @@ class VerifyAcceptanceCommand(BaseCommand):
             outcomes.append(_run_case(root, entrypoint, case, args.timeout))
         try:
             after = {key: _digest(file.read_bytes()) for key, file in checked_files.items()}
+            after["manifest"] = _digest(path.read_bytes())
         except OSError:
             after = {}
         if before != after:
