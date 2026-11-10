@@ -184,6 +184,10 @@ def make_plan(target: Path, *, force: bool, revision: str,
         raise ValueError("--target must be an existing project directory, not filesystem root")
     revision = checked_revision(revision)
     selected_layout = choose_layout(target, layout)
+    # Never import an application's unrelated core/ during installer doc generation.
+    if (selected_layout == "flat" and (target / "core").exists()
+            and not (_is_ours(target / "manage.py") or _is_ours(target / "agent_cli.py"))):
+        raise ValueError("Foreign core/ occupies flat runtime; choose --layout isolated")
     entrypoint = (select_entrypoint(target) if selected_layout == "flat"
                   else isolated_entrypoint(target))
     commands_dir = ("core/commands" if selected_layout == "flat"
