@@ -192,6 +192,68 @@ class LargeCommand(BaseCommand):
             self.assertEqual(sorted(p.name for p in root.iterdir()), [".gitignore", "existing.txt"])
             self.assertEqual((root / ".gitignore").read_text(encoding="utf-8"), "# user ignore\n")
 
+    def test_existing_agents_preserved_then_explicit_integrated(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            original = b"# Project rules\r\nDo not remove existing policy.\r\n"
+            (root / "AGENTS.md").write_bytes(original)
+            # Even --force must not wipe the owner's project instructions.
+            forced = invoke(str(INSTALLER), "--force", "--json", cwd=root)
+            self.assertEqual(forced.returncode, 0, forced.stderr)
+            self.assertEqual((root / "AGENTS.md").read_bytes(), original)
+            self.assertEqual(json.loads(forced.stdout)["guidance_state"], "existing_preserved")
+
+            preview = invoke(str(INSTALLER), "--integrate-agents", "--dry-run", "--json", cwd=root)
+            self.assertEqual(preview.returncode, 0, preview.stderr)
+            self.assertIn("AGENTS.md", json.loads(preview.stdout)["planned_overwritten"])
+            self.assertEqual((root / "AGENTS.md").read_bytes(), original)
+
+            installed = invoke(str(INSTALLER), "--integrate-agents", "--json", cwd=root)
+            self.assertEqual(installed.returncode, 0, installed.stderr)
+            plan = json.loads(installed.stdout)
+            self.assertEqual(plan["guidance_state"], "integration_planned")
+            updated = (root / "AGENTS.md").read_bytes()
+            self.assertTrue(updated.startswith(original))
+            self.assertEqual(updated.count(b"<!-- agent-cli-starter:begin -->"), 1)
+            self.assertIn(b"python manage.py", updated)
+            self.assertIn(b"\r\n## Agent CLI Starter", updated)
+            self.assertEqual(updated.count(b"\n"), updated.count(b"\r\n"))  # All line endings remain CRLF.
+
+            again = invoke(str(INSTALLER), "--integrate-agents", "--json", cwd=root)
+            self.assertEqual(again.returncode, 0, again.stderr)
+            self.assertEqual(json.loads(again.stdout)["guidance_state"], "already_integrated")
+            self.assertEqual((root / "AGENTS.md").read_bytes(), updated)
+
+    def test_agents_override_warning_and_marker_integrity(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "AGENTS.override.md").write_text("# Prefer me\n", encoding="utf-8")
+            (root / "AGENTS.md").write_text(
+                "User policy\n<!-- agent-cli-starter:begin -->\n", encoding="utf-8"
+            )
+            bad = invoke(str(INSTALLER), "--integrate-agents", "--json", cwd=root)
+            self.assertNotEqual(bad.returncode, 0)
+            self.assertIn("incomplete/duplicate integration markers", bad.stderr)
+            self.assertEqual(sorted(p.name for p in root.iterdir()),
+                             ["AGENTS.md", "AGENTS.override.md"])
+            (root / "AGENTS.md").unlink()
+            result = invoke(str(INSTALLER), "--json", cwd=root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(json.loads(result.stdout)["codex_override_present"])
+
+    def test_agents_integration_rollback_restores_exact_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            original = b"# Preserve\r\nexisting policy\r\n"
+            (root / "AGENTS.md").write_bytes(original)
+            failing = subprocess.CompletedProcess(args=[], returncode=5, stdout="",
+                                                  stderr="injected docgen failure")
+            with mock.patch.object(starter.subprocess, "run", return_value=failing):
+                with self.assertRaisesRegex(RuntimeError, "original files restored"):
+                    starter.install(root, integrate_agents=True)
+            self.assertEqual((root / "AGENTS.md").read_bytes(), original)
+            self.assertEqual(sorted(p.name for p in root.iterdir()), ["AGENTS.md"])
+
     def test_preview_existing_install_and_force(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

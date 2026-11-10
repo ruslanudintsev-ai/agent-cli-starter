@@ -9,6 +9,14 @@
 
 Instead of writing `temp.py`, `script_v1.py` and dumping unlimited logs into a model context, agents can extend a reusable Python CLI with explicit parameters, bounded JSON results, tests, and persistent operational notes.
 
+## Install into an existing project (Codex and other coding agents)
+
+**Do not nest this repository under `.agents/agent-cli-starter`.** Run its installer with the target **project root** as `--target`. The installer places `AGENTS.md` (if absent), `.agents/rules/`, `.agents/skills/` and the CLI at the correct relative paths. Codex reads project-root `AGENTS.md` and discovers repository Agent Skills from `.agents/skills/` (see [Codex setup](docs/CODEX.md)).
+
+**For existing `AGENTS.md`:** the installer preserves the entire file, even with `--force`. After reviewing the dry-run, use `--integrate-agents` to append a small, marked CLI reference without replacing project rules. An existing `AGENTS.override.md` may take precedence in Codex and needs separate review. Reopen Codex after installation to ensure it loads the new instructions.
+
+For coding agents: inspect the target repository's workflow rules, then install from a reviewed checkout using `--target <project-root> --dry-run --integrate-agents --json`, apply the same options without `--dry-run` on a permitted branch, run the installed CLI, and report what actually changed. Do not invent a new layout or claim installation from reading the README. Follow target repository's PR process if required.
+
 ## Quick install
 
 Open a terminal in the **target project directory** (not this starter repository).
@@ -55,7 +63,7 @@ curl -fsSL https://raw.githubusercontent.com/ruslanudintsev-ai/agent-cli-starter
 
 The shell installer obtains its Python installer from the same SHA; that installer downloads template files from the same SHA. The quick-install `main` URL is convenient but mutable. Verify/trust upstream code before executing a network script. `--ref` does not provide independent signature verification.
 
-The Python installer supports `--force` to replace starter-owned files, `--dry-run` for a non-writing plan, and `--ref` for a commit SHA. Never replace foreign entrypoints. Installation attempts to roll back **its own file writes** if a step fails, including failed documentation generation, but it cannot reverse side effects from arbitrary third-party plugins imported by the target CLI, or recover from power loss/forced termination at every point. Back up valuable projects before `--force`.
+The Python installer supports `--force` to replace starter-owned files (never an existing `AGENTS.md`), `--integrate-agents` for optional safe guidance integration, `--dry-run` for a non-writing plan, and `--ref` for a commit SHA. Never replace foreign entrypoints. Installation attempts to roll back **its own file writes** if a step fails, including failed documentation generation, but it cannot reverse side effects from arbitrary third-party plugins imported by the target CLI, or recover from power loss/forced termination at every point. Back up valuable projects before `--force`.
 
 ## Usage
 
@@ -109,7 +117,7 @@ The template includes a first-use `.agents/rules/agent-onboarding.md` instructio
 - **Cursor** — `.cursor/rules/agent-cli.mdc` includes an `alwaysApply` reference to the rules.
 - **Claude Code** — `CLAUDE.md` references the CLI and operational notes.
 - **Kilo Code** — automatically discovers root `AGENTS.md` and the project `.agents/skills/` directory. See [tested Kilo integration](docs/KILO_CODE.md); no platform-specific code is installed.
-- **AGENTS.md readers** — `AGENTS.md` introduces the same conventions.
+- **Codex / AGENTS.md readers** — project-root `AGENTS.md` introduces the same conventions; repo-local skills are under `.agents/skills/`. An existing project's instructions are preserved by default.
 - **Aider** — launch with `aider --read AIDER_CONVENTIONS.md` to inject conventions. Aider won't automatically read that file just because it exists.
 
 Some agents and versions do not auto-load every instruction format. Check your tool's current behavior; these are instructions, not a hard enforcement boundary.
