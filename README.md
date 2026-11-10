@@ -76,6 +76,7 @@ python manage.py --json sys-info --details
 python manage.py dev-scaffold --command cache-clear --json
 python manage.py dev-validate --file core/commands/cache_clear.py --json
 python manage.py system-docgen --json
+python manage.py verify-acceptance --manifest acceptance.json --sha256 REVIEWED_64_HEX_SHA256 --execute --json
 python -m unittest discover -s tests -v
 ```
 
@@ -99,6 +100,7 @@ python agent_cli.py sys-info --json
 | Project Adaptation | `project-scan` detects common top-level stack markers without running project code or exposing manifest content. It proposes command names for deliberate implementation; it does **not** install or execute them. |
 | Scaffold/Validation | `dev-scaffold` creates a persistent command and `unittest`; `dev-validate` checks AST for direct `print()` and inheritance. It is a linting aid, not a complete code safety proof. |
 | Procedural Memory | `gotchas.md` stores verified environment findings. `self-learning.md` establishes a Post-Task Audit and doc update ritual; agents must actually follow it. |
+| Acceptance Verification | `verify-acceptance` runs a reviewer-pinned manifest of positive and negative CLI scenarios with pinned fixture hashes. Opt-in execution; no shell commands or raw subprocess logs in the result. Not a sandbox or full proof of semantics. |
 
 ## Philosophy and adaptation
 

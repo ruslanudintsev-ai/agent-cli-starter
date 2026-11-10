@@ -31,6 +31,10 @@ The agent retains *operational knowledge*, not hidden thoughts or unfiltered log
 - Treat test changes and reviewer/oracle changes as separate reviewable work. Do not weaken acceptance criteria to obtain a green result. For high-risk tasks run acceptance in a distinct, controlled runner.
 - Model instructions provide discipline, not enforcement; tools and permissions still must enforce safety. See `docs/RELIABILITY.md` in the upstream starter (if present).
 
+## Behavioral acceptance runner (when independently reviewed criteria exist)
+
+Use `python __ENTRYPOINT__ verify-acceptance --manifest <reviewed-json> --sha256 <reviewer-pinned-digest> --execute --json` only on trusted project code, approved fixtures and a controlled environment. The verifier requires both positive and negative cases; it refuses unpinned/mutated fixtures and does not emit raw subprocess logs. It is **not** a security sandbox or a guarantee the criteria are truthful. A model must not choose its own easy oracle and then call that independent proof. Keep manifest and digest under reviewer control; `VERIFIED` is scoped to the specified criteria and revision.
+
 ## Privacy boundary
 
 - A destination project's `gotchas.md` can contain sensitive operational context and is **not** automatically suitable for public GitHub.

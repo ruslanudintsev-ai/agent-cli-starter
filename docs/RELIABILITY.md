@@ -25,9 +25,17 @@ States: `SCAFFOLDED`, `IMPLEMENTED`, `VERIFIED`, `FAILED`, `BLOCKED/UNVERIFIED`.
 
 Agents must replace the placeholders with **meaningful fixtures** and prove the real task. `.agents/rules/self-learning.md` requires Grounding Proof and honest status. The core cannot force an external agent to follow its prose or prevent it from editing tests: it is a first step to closing the false-success gap.
 
+### Shipped phase 2: pinned positive/negative CLI acceptance runner
+
+`verify-acceptance` reads a JSON manifest that names a trusted CLI command, its project-local module, positive and negative arguments, expected exit codes, and **at least one functional JSON assertion beyond `status` per case**. A SHA-256 pinned by the reviewer protects the exact manifest bytes; listed fixture files also have pinned SHA-256 digests. The runner uses `subprocess.run` with a bounded timeout, direct Python argv (never a shell), stripped-down environment and no raw logs in its report. It hashes the source file before/after execution to detect changed code during verification.
+
+Only `--execute` authorizes running the trusted destination code. Without it the result is `UNVERIFIED`, with mismatched pins or invalid criteria it is `BLOCKED`, with failed behavior it is `FAILED`, and with **all explicitly described cases** satisfied it is `VERIFIED`. This status is scoped to the manifest and code revision, not a claim that all unspecified business requirements are satisfied.
+
+**Critical boundary:** the runner is not a sandbox. Python imports project command modules and test code may have side effects. The calling agent could fabricate favorable tests or recompute a changed digest; genuine independence requires the reviewer to keep the manifest, pin and fixtures outside the implementing agent's control. The test environment must be trusted and isolated according to project risk. This is a CLI-verification adapter to the universal reliability contract, not a model-specific implementation or a general-purpose remote shell.
+
 ### Not yet shipped
 
-A fully independent verification harness, durable pre-approved acceptance manifests, signed/locked or separate-runner oracles, versioned evidence references and reproducible false-success benchmark suites are **future work**. Do not advertise those as existing.
+A platform-enforced separation of author and verifier, signed/locked or separate-runner oracles, reproducible multi-project false-success benchmarks and semantic correctness outside the stated cases are **future work**. A SHA-256 argument provided by the same agent is NOT an independently approved oracle. Do not advertise those as existing.
 
 ## Reporting, privacy, memory
 

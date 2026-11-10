@@ -49,6 +49,7 @@ TEMPLATE_FILES = (
     "core/commands/project_scan.py",
     "core/commands/checkpoints.py",
     "core/commands/dev_validate.py",
+    "core/commands/verify_acceptance.py",
     "manage.py",
 )
 IGNORE_LINES = (".cle_state/", ".cle_cache/", "__pycache__/")

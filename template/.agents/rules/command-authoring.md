@@ -14,4 +14,6 @@ description: Reusable command development contract, validation and safety gate
 7. Command discovery is **exception isolation, not a permission boundary or sandbox**. New modules are imported and can execute top-level Python. Review all contributed code before importing it.
 8. A plugin that checks runtime invariants may override `post_execution_assertions`, returning bounded generic warnings. It must not mutate state, inspect unrelated processes or disclose secrets. Never assume a default global invariant applies to every project.
 
+9. When a reviewer supplies an independently checked acceptance manifest and pinned SHA-256, run `verify-acceptance --manifest <file> --sha256 <digest> --execute --json` in an isolated trusted test checkout. A generated unit test is not an independent oracle. This runner executes trusted project CLI code and is NOT a security sandbox.
+
 These are instructions for cooperating agents, not a hard enforcement or a substitute for project-specific safety rules.

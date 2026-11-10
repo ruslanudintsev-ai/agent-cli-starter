@@ -9,3 +9,5 @@ Use the evidence-first memory procedure in `.agents/rules/self-learning.md`; nev
 For verified improvements consult `.agents/skills/self-improvement/SKILL.md`, `.agents/skills/cli-tools/recipes.md`, and `.agents/backlog/cli-features.md`. These are private project-local notes unless explicitly reviewed for publication.
 
 Never claim a newly scaffolded command is fully implemented: the default returns NOT_IMPLEMENTED and its acceptance placeholders fail. Ground completion in independent behavioral checks (positive and negative case) and evidence; see `.agents/rules/self-learning.md`.
+
+For independently reviewed CLI acceptance criteria, use `verify-acceptance` with a pinned manifest hash and positive + negative tests. Do not call it a security sandbox or proof of unrelated business requirements.
