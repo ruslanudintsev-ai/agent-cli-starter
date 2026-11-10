@@ -216,7 +216,8 @@ class LargeCommand(BaseCommand):
             self.assertTrue(updated.startswith(original))
             self.assertEqual(updated.count(b"<!-- agent-cli-starter:begin -->"), 1)
             self.assertIn(b"python manage.py", updated)
-            self.assertNotIn(b"\n## Agent CLI Starter", updated)  # Existing CRLF preserved.
+            self.assertIn(b"\r\n## Agent CLI Starter", updated)
+            self.assertEqual(updated.count(b"\n"), updated.count(b"\r\n"))  # All line endings remain CRLF.
 
             again = invoke(str(INSTALLER), "--integrate-agents", "--json", cwd=root)
             self.assertEqual(again.returncode, 0, again.stderr)
