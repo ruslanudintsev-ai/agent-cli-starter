@@ -16,3 +16,5 @@ When entering a new project, or when its stack materially changes:
 7. Obtain normal authorization before side effects, destructive operations, production access, process termination, or network calls. Never automatically run suggested commands or generate dozens of unused modules.
 
 This workflow is a set of instructions; it does not automatically enforce agent behavior.
+
+8. If a task genuinely needs restartable progress, use project-local `core.state.CheckpointStore` with explicit expiry, validation on resume and project-specific privacy checks. No default automatic resume or recovery is provided.

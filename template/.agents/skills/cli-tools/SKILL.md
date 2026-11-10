@@ -11,6 +11,18 @@ Entry point: `python manage.py <command> --json`
 
 ## Commands
 
+### `checkpoints`
+
+List checkpoint metadata or prune expired entries (never show payloads)
+
+Usage: `python manage.py checkpoints --json`
+
+| Argument | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `--json` | flag | no | — | Machine-readable response |
+| `--action` | list / prune | no | 'list' | List metadata or preview/apply expiry cleanup |
+| `--apply` | flag | no | False | Allow removal of expired entries during --action prune |
+
 ### `dev-scaffold`
 
 Create a new reusable command module and a unittest without overwriting files

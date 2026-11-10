@@ -2,10 +2,13 @@
 
 The CLI starter helps autonomous coding assistants keep **verified reusable engineering lessons** between sessions. It does not change model weights, provide hidden persistent reasoning, or guarantee any particular assistant loads the files automatically.
 
-## Two separate knowledge surfaces
+## Separate knowledge surfaces
 
 - `.agents/skills/cli-tools/SKILL.md` is a generated *interface reference*: which CLI commands exist and how their `argparse` options work. Regenerate it with `system-docgen` after code changes. Do not manually append incidents here; generation replaces it.
 - `.agents/skills/cli-tools/gotchas.md` holds *project-local operational evidence*: reproductions, validated workarounds, relevant environment constraints and dates. The assistant must review its relevance before using an old note.
+- `.agents/skills/cli-tools/recipes.md` is a *manually maintained*, tested project workflow collection. Docgen never overwrites it.
+- `.agents/backlog/cli-features.md` is a collection of **proposals** for missing commands, not installed features.
+- `.agents/skills/self-improvement/SKILL.md` guides verification and proper classification of reusable knowledge; it is not a background autonomous agent.
 
 ## Evidence-first learning loop
 
