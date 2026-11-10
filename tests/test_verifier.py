@@ -138,6 +138,23 @@ class AcceptanceTests(unittest.TestCase):
         self.assertEqual(out["verification_state"], "BLOCKED")
         self.assertEqual(out["reason"], "fixture_hash_mismatch")
 
+    def test_source_mutation_during_run_is_blocked(self) -> None:
+        """Even matching outputs cannot justify VERIFIED if tested code changed."""
+        original = self.source.read_text(encoding="utf-8")
+        mutation = '''        Path(__file__).write_text(
+            Path(__file__).read_text(encoding="utf-8") + "\n# changed during verification\n",
+            encoding="utf-8")
+'''
+        # The plugin imports pathlib in run, so this probe is isolated to a temp checkout.
+        self.source.write_text(
+            original.replace('        if data["broken"]:', mutation + '        if data["broken"]:'),
+            encoding="utf-8",
+        )
+        call, out = self.verify()
+        self.assertNotEqual(call.returncode, 0)
+        self.assertEqual(out["verification_state"], "BLOCKED")
+        self.assertEqual(out["reason"], "source_or_fixture_changed_during_verification")
+
     def test_manifest_input_injection_rejected(self) -> None:
         self.contract["cases"][1]["argv"] = ["audit-demo", "--fixture", "fixtures/healthy.json", "\nmalicious"]
         call, out = self.verify()
