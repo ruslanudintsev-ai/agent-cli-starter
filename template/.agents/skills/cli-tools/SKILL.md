@@ -33,6 +33,17 @@ Usage: `python manage.py dev-validate --json`
 | `--json` | flag | no | — | Machine-readable response |
 | `--file` | str | yes | None | Project-local Python command module |
 
+### `project-scan`
+
+Read-only stack detection and suggested project CLI commands
+
+Usage: `python manage.py project-scan --json`
+
+| Argument | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `--json` | flag | no | — | Machine-readable response |
+| `--root` | str | no | '.' | Existing project directory to inspect |
+
 ### `sys-info`
 
 OS, Python interpreter and physical RAM diagnostics

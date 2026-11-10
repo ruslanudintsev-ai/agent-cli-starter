@@ -37,6 +37,7 @@ python setup_starter_kit.py --target /path/to/project
 
 ```bash
 python manage.py sys-info --json
+python manage.py project-scan --json
 python manage.py --json sys-info --details
 python manage.py dev-scaffold --command cache-clear --json
 python manage.py dev-validate --file core/commands/cache_clear.py --json
@@ -59,18 +60,31 @@ python agent_cli.py sys-info --json
 | Safe Discovery | Imports every `core/commands/*.py` module independently. Broken imports, class constructors, or argument registration are reported as warnings while healthy commands continue. **Not a sandbox** for untrusted code. |
 | Telemetry | Duration is always included; process RSS is included only when optional `psutil` happens to be installed. Physical RAM uses standard-library OS fallbacks. |
 | Doc Sync | `system-docgen` inspects registered `argparse` subparsers and generates `SKILL.md` including argument tables. |
+| Project Adaptation | `project-scan` detects common top-level stack markers without running project code or exposing manifest content. It proposes command names for deliberate implementation; it does **not** install or execute them. |
 | Scaffold/Validation | `dev-scaffold` creates a persistent command and `unittest`; `dev-validate` checks AST for direct `print()` and inheritance. It is a linting aid, not a complete code safety proof. |
 | Procedural Memory | `gotchas.md` stores verified environment findings. `self-learning.md` establishes a Post-Task Audit and doc update ritual; agents must actually follow it. |
 
+## Philosophy and adaptation
+
+- [Engineering manifesto](docs/MANIFESTO.md) — bounded context, durable commands, verified procedural memory and responsible autonomy.
+- [Project adaptation loop](docs/PROJECT_ADAPTATION.md) — read-only project discovery, opt-in tool expansion and privacy boundaries.
+- [Roadmap](docs/ROADMAP.md) — shipped behavior versus ideas that still need implementation.
+
+The template includes a first-use `.agents/rules/agent-onboarding.md` instruction. In a new project run `project-scan`, inspect the output and implement only the commands justified by an actual task. The scanner is shallow, deliberately avoids `.env` and private directories, and never runs user code.
+
 ## Integration with agents
 
-- **Antigravity / agents supporting `.agents/`** — two `always_on` rules under `.agents/rules/`.
+- **Antigravity / agents supporting `.agents/`** — three `always_on` rules under `.agents/rules/`.
 - **Cursor** — `.cursor/rules/agent-cli.mdc` includes an `alwaysApply` reference to the rules.
 - **Claude Code** — `CLAUDE.md` references the CLI and operational notes.
 - **AGENTS.md readers** — `AGENTS.md` introduces the same conventions.
 - **Aider** — launch with `aider --read AIDER_CONVENTIONS.md` to inject conventions. Aider won't automatically read that file just because it exists.
 
 Some agents and versions do not auto-load every instruction format. Check your tool's current behavior; these are instructions, not a hard enforcement boundary.
+
+## Privacy policy for upstream contributions
+
+This repository contains only generic, publication-safe source, instructions and examples. Do not commit raw personal planning documents, private project paths, hostnames, credentials, tokens, proxy configuration, internal incident logs, `.env` content or sensitive operational data from a destination project. Review changes before publishing. Project-specific lessons belong in the **private destination project**, not this public starter.
 
 ## Installer guarantees and limits
 

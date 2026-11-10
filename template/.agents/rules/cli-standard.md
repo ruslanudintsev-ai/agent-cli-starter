@@ -5,7 +5,7 @@ description: Reusable command-first workflow; prohibit throwaway root scripts
 
 # CLI standard — always on
 
-1. First read `.agents/skills/cli-tools/SKILL.md` and `.agents/skills/cli-tools/gotchas.md`.
+1. First read `.agents/skills/cli-tools/SKILL.md` , `.agents/skills/cli-tools/gotchas.md`, and `.agents/rules/agent-onboarding.md`.
 2. Do not create temporary, ad-hoc project scripts (`temp.py`, `script_v1.py`, `debug_once.py`, etc.) in the repository root or elsewhere just to complete an operation. Temporary **data** and test fixtures are different from throwaway executable scripts.
 3. Run project operations through `python __ENTRYPOINT__ <command> --json`. Examples: `python __ENTRYPOINT__ sys-info --json` and `python __ENTRYPOINT__ dev-validate --file core/commands/example.py --json`.
 4. If a reusable command is missing, first run `python __ENTRYPOINT__ dev-scaffold --command your-command --json`; implement its persistent command module under `core/commands/` and add a test.

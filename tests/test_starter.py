@@ -96,6 +96,53 @@ class InstallTests(unittest.TestCase):
             tests = invoke("-m", "unittest", "discover", "-s", "tests", "-v", cwd=root)
             self.assertEqual(tests.returncode, 0, tests.stdout + tests.stderr)
 
+    def test_project_scan_is_read_only_and_sanitized(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self.assertEqual(invoke(str(INSTALLER), cwd=root).returncode, 0)
+            (root / "pyproject.toml").write_text('[project]\ndependencies = ["Django", "playwright"]\n', encoding="utf-8")
+            (root / "package.json").write_text(json.dumps({"scripts": {"build": "secret-command-value", "test": "private-script"}}), encoding="utf-8")
+            (root / ".env").write_text("SECRET_TOKEN=never-publish-me\n", encoding="utf-8")
+            scan = invoke("manage.py", "project-scan", "--json", cwd=root)
+            self.assertEqual(scan.returncode, 0, scan.stdout + scan.stderr)
+            data = json.loads(scan.stdout)["result"]
+            self.assertEqual(data["status"], "ok")
+            self.assertIn("django", data["detected_stack"])
+            self.assertIn("node", data["detected_stack"])
+            self.assertIn("frontend-build", data["recommended_commands"])
+            self.assertFalse(data["recommendations_installed"])
+            self.assertNotIn("never-publish-me", scan.stdout)
+            self.assertNotIn("secret-command-value", scan.stdout)
+            self.assertNotIn("private-script", scan.stdout)
+            self.assertTrue((root / ".env").exists())
+
+    def test_project_scan_missing_root_and_read_only_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self.assertEqual(invoke(str(INSTALLER), cwd=root).returncode, 0)
+            missing = invoke("manage.py", "project-scan", "--root", "not-a-directory", "--json", cwd=root)
+            self.assertNotEqual(missing.returncode, 0)
+            self.assertEqual(json.loads(missing.stdout)["result"]["status"], "error")
+            (root / "Dockerfile").write_text("FROM python:3.12\n", encoding="utf-8")
+            (root / "database.sqlite3").write_bytes(b"not-a-real-database")
+            good = invoke("manage.py", "project-scan", "--json", cwd=root)
+            self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
+            payload = json.loads(good.stdout)["result"]
+            self.assertIn("sqlite", payload["detected_stack"])
+            self.assertIn("docker", payload["detected_stack"])
+            self.assertNotIn("database.sqlite3", good.stdout)
+
+    def test_installed_onboarding_and_generated_skill(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "manage.py").write_text("# existing Django manage\n", encoding="utf-8")
+            self.assertEqual(invoke(str(INSTALLER), cwd=root).returncode, 0)
+            onboarding = (root / ".agents/rules/agent-onboarding.md").read_text(encoding="utf-8")
+            self.assertIn("python agent_cli.py project-scan --json", onboarding)
+            skill = (root / ".agents/skills/cli-tools/SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("### `project-scan`", skill)
+            self.assertIn("--root", skill)
+
     def test_output_budget(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

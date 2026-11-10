@@ -19,6 +19,7 @@ RAW_TEMPLATE = "https://raw.githubusercontent.com/ruslanudintsev-ai/agent-cli-st
 TEMPLATE_FILES = (
     ".agents/rules/cli-standard.md",
     ".agents/rules/self-learning.md",
+    ".agents/rules/agent-onboarding.md",
     ".agents/skills/cli-tools/SKILL.md",
     ".agents/skills/cli-tools/gotchas.md",
     ".cursor/rules/agent-cli.mdc",
@@ -31,6 +32,7 @@ TEMPLATE_FILES = (
     "core/commands/sys_info.py",
     "core/commands/system_docgen.py",
     "core/commands/dev_scaffold.py",
+    "core/commands/project_scan.py",
     "core/commands/dev_validate.py",
     "manage.py",
 )

@@ -3,4 +3,4 @@ description: Reusable project CLI and post-task audit
 alwaysApply: true
 ---
 
-Read `.agents/rules/cli-standard.md` and `.agents/rules/self-learning.md` before editing project code. Use the documented `python __ENTRYPOINT__ <command> --json` CLI, not temporary root scripts. Keep gotchas and SKILL.md updated.
+Read `.agents/rules/cli-standard.md` and `.agents/rules/self-learning.md` and `.agents/rules/agent-onboarding.md` before editing project code. Use the documented `python __ENTRYPOINT__ <command> --json` CLI, not temporary root scripts. Keep gotchas and SKILL.md updated.
