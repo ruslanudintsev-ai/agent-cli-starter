@@ -244,6 +244,11 @@ def make_plan(target: Path, *, force: bool, revision: str,
         "docgen_dry_run": ".agents/skills/cli-tools/SKILL.md" in skipped,
         "guidance_state": guidance_state,
         "codex_override_present": (target / "AGENTS.override.md").exists(),
+        "agent_adoption_state": "UNVERIFIED",
+        "next_verification_commands": [
+            f"python {entrypoint} sys-info --json",
+            f"python {entrypoint} project-scan --json",
+        ],
     }
     return plan, writes, extra
 
@@ -328,7 +333,8 @@ def install(target: Path, force: bool = False, dry_run: bool = False,
     plan, writes, extra = make_plan(root, force=force, revision=revision,
                                    integrate_agents=integrate_agents, layout=layout)
     if dry_run:
-        return {**plan, "dry_run": True, "created": [], "overwritten": [], "gitignore_updated": False}
+        return {**plan, "installation_state": "PLANNED", "dry_run": True,
+                "created": [], "overwritten": [], "gitignore_updated": False}
 
     changes = writes + extra
     created_dirs: list[Path] = []
@@ -371,6 +377,7 @@ def install(target: Path, force: bool = False, dry_run: bool = False,
     return {
         **plan,
         "dry_run": False,
+        "installation_state": "FILES_INSTALLED",
         "created": [c.relative for c in changes if not c.existed],
         "overwritten": [c.relative for c in changes if c.existed],
         "gitignore_updated": bool(extra),
