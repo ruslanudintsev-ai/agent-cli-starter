@@ -62,6 +62,8 @@ The Python installer supports `--force` to replace starter-owned files, `--dry-r
 ```bash
 python manage.py sys-info --json
 python manage.py project-scan --json
+python manage.py checkpoints --json
+python manage.py checkpoints --action prune --json  # preview only
 python manage.py --json sys-info --details
 python manage.py dev-scaffold --command cache-clear --json
 python manage.py dev-validate --file core/commands/cache_clear.py --json
@@ -84,6 +86,8 @@ python agent_cli.py sys-info --json
 | Safe Discovery | Imports every `core/commands/*.py` module independently. Broken imports, class constructors, or argument registration are reported as warnings while healthy commands continue. **Not a sandbox** for untrusted code. |
 | Telemetry | Duration is always included; process RSS is included only when optional `psutil` happens to be installed. Physical RAM uses standard-library OS fallbacks. |
 | Doc Sync | `system-docgen` inspects registered `argparse` subparsers and generates `SKILL.md` including argument tables. |
+| Optional Assertions | Plugins may return bounded, read-only `post_execution_assertions` warnings. No global system checks run by default. |
+| Checkpoints | Project-local bounded atomic JSON with TTL and cooperative locks; `checkpoints` lists metadata or explicitly prunes expired entries. |
 | Project Adaptation | `project-scan` detects common top-level stack markers without running project code or exposing manifest content. It proposes command names for deliberate implementation; it does **not** install or execute them. |
 | Scaffold/Validation | `dev-scaffold` creates a persistent command and `unittest`; `dev-validate` checks AST for direct `print()` and inheritance. It is a linting aid, not a complete code safety proof. |
 | Procedural Memory | `gotchas.md` stores verified environment findings. `self-learning.md` establishes a Post-Task Audit and doc update ritual; agents must actually follow it. |
@@ -92,6 +96,7 @@ python agent_cli.py sys-info --json
 
 - [Engineering manifesto](docs/MANIFESTO.md) — bounded context, durable commands, verified procedural memory and responsible autonomy.
 - [Project adaptation loop](docs/PROJECT_ADAPTATION.md) — read-only project discovery, opt-in tool expansion and privacy boundaries.
+- [Universality and safety boundaries](docs/UNIVERSALITY.md) — implemented controls versus deliberately omitted project-specific features.
 - [Roadmap](docs/ROADMAP.md) — shipped behavior versus ideas that still need implementation.
 - [Procedural memory protocol](docs/PROCEDURAL_MEMORY.md) — verified lessons, review scope, privacy and limits.
 
@@ -139,3 +144,11 @@ GitHub Actions runs the tests on Ubuntu and Windows for Python 3.10, 3.11 and 3.
 ## License
 
 [MIT](LICENSE).
+
+## Self-improvement without leaking project context
+
+The template includes a persistent command-authoring rule, a `self-improvement` skill, a manually maintained `cli-tools/recipes.md` and a project-local `.agents/backlog/cli-features.md`. Agents can suggest durable improvements and record only tested workflows. `system-docgen` changes the generated command reference, not personal notes. Existing `gotchas.md`, `recipes.md` and `.agents/backlog/cli-features.md` are preserved even when upgrading with installer `--force`. No automated background agent or model-weight training is implied.
+
+Long-running project commands can optionally use `from core.state import CheckpointStore` for private, TTL-limited checkpoints; the CLI provides metadata-only listing and a read-only expiry preview by default. Restore/resume logic is never automatic; each command must validate its own state and request appropriate authorization.
+
+For stack-specific health checks, a plugin can override `BaseCommand.post_execution_assertions()` to return bounded **warnings**, never to change running systems. No project-specific processes or services are inspected by default.

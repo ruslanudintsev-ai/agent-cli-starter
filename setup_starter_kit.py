@@ -29,23 +29,35 @@ TEMPLATE_FILES = (
     ".agents/rules/cli-standard.md",
     ".agents/rules/self-learning.md",
     ".agents/rules/agent-onboarding.md",
+    ".agents/rules/command-authoring.md",
     ".agents/skills/cli-tools/SKILL.md",
     ".agents/skills/cli-tools/gotchas.md",
+    ".agents/skills/cli-tools/recipes.md",
+    ".agents/skills/self-improvement/SKILL.md",
+    ".agents/backlog/cli-features.md",
     ".cursor/rules/agent-cli.mdc",
     "AGENTS.md",
     "CLAUDE.md",
     "AIDER_CONVENTIONS.md",
     "core/__init__.py",
+    "core/state.py",
     "core/commands/__init__.py",
     "core/commands/base.py",
     "core/commands/sys_info.py",
     "core/commands/system_docgen.py",
     "core/commands/dev_scaffold.py",
     "core/commands/project_scan.py",
+    "core/commands/checkpoints.py",
     "core/commands/dev_validate.py",
     "manage.py",
 )
 IGNORE_LINES = (".cle_state/", ".cle_cache/", "__pycache__/")
+# User-earned operational knowledge is never overwritten, even with --force.
+PRESERVE_USER_NOTES = frozenset((
+    ".agents/skills/cli-tools/gotchas.md",
+    ".agents/skills/cli-tools/recipes.md",
+    ".agents/backlog/cli-features.md",
+))
 MARKER = "# AGENT_CLI_STARTER_ENTRYPOINT"
 PIN_RE = re.compile(r"[a-fA-F0-9]{40}\Z")
 
@@ -145,7 +157,7 @@ def make_plan(target: Path, *, force: bool, revision: str) -> tuple[dict[str, ob
     for relative, content in templates.items():
         filename = entrypoint if relative == "manage.py" else relative
         destination = checked_path(target, filename)
-        if destination.exists() and not force:
+        if destination.exists() and (not force or filename in PRESERVE_USER_NOTES):
             skipped.append(filename)
             continue
         writes.append(Change(filename, destination, content.replace("__ENTRYPOINT__", entrypoint).encode("utf-8"), destination.exists()))

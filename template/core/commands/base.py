@@ -98,15 +98,33 @@ class BaseCommand(abc.ABC):
         except (OSError, ValueError, AttributeError):
             return None
 
+    def post_execution_assertions(self, args: argparse.Namespace,
+                                  data: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+        """Optional, read-only project checks; disabled by default.
+
+        Return small warning mappings with an invariant and a safe message.
+        Never use this hook to mutate state or perform automated remediation.
+        """
+        return []
+
     def execute(self, args: argparse.Namespace) -> int:
         """Isolate stray stdout, report exceptions, and serialize one bounded response."""
         started = time.perf_counter()
         captured = _BoundedWriter()
+        checks: list[Mapping[str, Any]] = []
         try:
             with contextlib.redirect_stdout(captured):
                 data = self.run(args)
-            if not isinstance(data, Mapping):
-                raise TypeError("Command.run() must return a mapping")
+                if not isinstance(data, Mapping):
+                    raise TypeError("Command.run() must return a mapping")
+                try:
+                    proposed_checks = self.post_execution_assertions(args, data)
+                    if not isinstance(proposed_checks, list) or not all(isinstance(v, Mapping) for v in proposed_checks):
+                        raise TypeError("post_execution_assertions must return a list of mappings")
+                    checks = proposed_checks[:10]
+                except Exception as check_error:
+                    checks = [{"invariant": "optional-health-check", "severity": "warning",
+                               "message": "Project check unavailable", "error_type": type(check_error).__name__}]
             status = str(data.get("status", "ok"))
             exit_code = 0 if status == "ok" else 1
             clean, count = self._apply_output_budgets(data)
@@ -119,6 +137,10 @@ class BaseCommand(abc.ABC):
             "process_rss_mb": self._memory_mb(),
         }
         result: dict[str, Any] = {"command": self.name, "result": clean, "_telemetry": telemetry}
+        if checks:
+            bounded_checks, extra_count = self._apply_output_budgets(checks)
+            result["_system_health_warning"] = bounded_checks
+            count += extra_count
         if count or captured.dropped or captured.length:
             result["_budget_notice"] = {
                 "truncated_nodes": count,

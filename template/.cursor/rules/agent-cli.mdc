@@ -4,3 +4,5 @@ alwaysApply: true
 ---
 
 Read `.agents/rules/cli-standard.md` and `.agents/rules/self-learning.md` and `.agents/rules/agent-onboarding.md` before editing project code. Use the documented `python __ENTRYPOINT__ <command> --json` CLI, not temporary root scripts. Keep gotchas and SKILL.md updated.
+
+For new commands follow `.agents/rules/command-authoring.md`; use `.agents/skills/self-improvement/SKILL.md` for evidence-based workflow improvement. Keep manually maintained recipes in `cli-tools/recipes.md` and proposed commands in `.agents/backlog/cli-features.md`.
