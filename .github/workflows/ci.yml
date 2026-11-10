@@ -21,3 +21,6 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Check installer syntax
         run: python -m py_compile setup_starter_kit.py template/manage.py
+      - name: Validate shell installer syntax
+        if: runner.os == 'Linux'
+        run: bash -n install.sh
