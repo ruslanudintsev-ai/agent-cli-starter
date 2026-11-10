@@ -142,7 +142,7 @@ class AcceptanceTests(unittest.TestCase):
         """Even matching outputs cannot justify VERIFIED if tested code changed."""
         original = self.source.read_text(encoding="utf-8")
         mutation = '''        Path(__file__).write_text(
-            Path(__file__).read_text(encoding="utf-8") + "\n# changed during verification\n",
+            Path(__file__).read_text(encoding="utf-8") + "\\n# changed during verification\\n",
             encoding="utf-8")
 '''
         # The plugin imports pathlib in run, so this probe is isolated to a temp checkout.
