@@ -60,6 +60,8 @@ PRESERVE_USER_NOTES = frozenset((
 ))
 MARKER = "# AGENT_CLI_STARTER_ENTRYPOINT"
 PIN_RE = re.compile(r"[a-fA-F0-9]{40}\Z")
+AGENTS_START = "<!-- agent-cli-starter:begin -->"
+AGENTS_END = "<!-- agent-cli-starter:end -->"
 
 
 @dataclass(frozen=True)
@@ -144,7 +146,8 @@ def gitignore_content(path: Path) -> tuple[bytes | None, list[str]]:
     return (current + suffix + newline.join(missing) + newline).encode("utf-8"), missing
 
 
-def make_plan(target: Path, *, force: bool, revision: str) -> tuple[dict[str, object], list[Change], list[Change]]:
+def make_plan(target: Path, *, force: bool, revision: str,
+              integrate_agents: bool = False) -> tuple[dict[str, object], list[Change], list[Change]]:
     """Build an inspection-ready action plan without changing the target."""
     target = target.expanduser().resolve()
     if not target.is_dir() or target == Path(target.anchor):
@@ -154,9 +157,24 @@ def make_plan(target: Path, *, force: bool, revision: str) -> tuple[dict[str, ob
     templates = load_templates(revision)  # complete all network reads before writing
     writes: list[Change] = []
     skipped: list[str] = []
+    guidance_state = "new_file"
     for relative, content in templates.items():
         filename = entrypoint if relative == "manage.py" else relative
         destination = checked_path(target, filename)
+        if filename == "AGENTS.md" and destination.exists():
+            # Existing project policies are never replaced, even with --force.
+            if integrate_agents:
+                content_bytes = integrate_existing_agents(destination, entrypoint)
+                if content_bytes is None:
+                    skipped.append(filename)
+                    guidance_state = "already_integrated"
+                else:
+                    writes.append(Change(filename, destination, content_bytes, True))
+                    guidance_state = "integration_planned"
+            else:
+                skipped.append(filename)
+                guidance_state = "existing_preserved"
+            continue
         if destination.exists() and (not force or filename in PRESERVE_USER_NOTES):
             skipped.append(filename)
             continue
@@ -173,9 +191,37 @@ def make_plan(target: Path, *, force: bool, revision: str) -> tuple[dict[str, ob
         "skipped": skipped,
         "gitignore_additions": added,
         "docgen_dry_run": ".agents/skills/cli-tools/SKILL.md" in skipped,
+        "guidance_state": guidance_state,
+        "codex_override_present": (target / "AGENTS.override.md").exists(),
     }
     return plan, writes, extra
 
+
+
+def integrate_existing_agents(path: Path, entrypoint: str) -> bytes | None:
+    """Append a small managed reference without replacing project instructions."""
+    raw = path.read_bytes()
+    text = raw.decode("utf-8")
+    starts, ends = text.count(AGENTS_START), text.count(AGENTS_END)
+    if starts != ends or starts > 1:
+        raise ValueError("AGENTS.md contains incomplete/duplicate integration markers")
+    if starts:
+        if text.index(AGENTS_START) > text.index(AGENTS_END):
+            raise ValueError("AGENTS.md integration markers are out of order")
+        return None
+    newline = "\r\n" if b"\r\n" in raw and b"\n" not in raw.replace(b"\r\n", b"") else "\n"
+    block = (
+        f"{AGENTS_START}\n"
+        "## Agent CLI Starter (project-local)\n"
+        f"Run reusable operations with `python {entrypoint} <command> --json`. "
+        "First inspect `.agents/skills/cli-tools/SKILL.md` and "
+        "`.agents/rules/cli-standard.md`; follow `.agents/rules/self-learning.md` "
+        "and the project acceptance criteria before claiming VERIFIED. "
+        "Project-specific instructions above remain authoritative.\n"
+        f"{AGENTS_END}\n"
+    ).replace("\n", newline)
+    separator = (newline if text and not text.endswith(("\r", "\n")) else "") + (newline if text else "")
+    return (text + separator + block).encode("utf-8")
 
 def _atomic_write(path: Path, content: bytes, mode: int | None = None) -> None:
     """Replace an individual file atomically on its own filesystem."""
@@ -222,11 +268,13 @@ def _restore(journal: list[tuple[Path, Path | None, int | None]], created_dirs: 
     return failures
 
 
-def install(target: Path, force: bool = False, dry_run: bool = False, revision: str = "main") -> dict[str, object]:
+def install(target: Path, force: bool = False, dry_run: bool = False,
+            revision: str = "main", integrate_agents: bool = False) -> dict[str, object]:
     if sys.version_info < (3, 10):
         raise RuntimeError("Python 3.10+ is required")
     root = target.expanduser().resolve()
-    plan, writes, extra = make_plan(root, force=force, revision=revision)
+    plan, writes, extra = make_plan(root, force=force, revision=revision,
+                                   integrate_agents=integrate_agents)
     if dry_run:
         return {**plan, "dry_run": True, "created": [], "overwritten": [], "gitignore_updated": False}
 
@@ -280,13 +328,16 @@ def install(target: Path, force: bool = False, dry_run: bool = False, revision: 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Safely install reusable zero-dependency agent CLI")
     parser.add_argument("--target", type=Path, default=Path.cwd(), help="Existing destination project")
-    parser.add_argument("--force", action="store_true", help="Replace existing starter files (never foreign entrypoints)")
+    parser.add_argument("--force", action="store_true", help="Replace existing starter files (never foreign entrypoints or existing AGENTS.md)")
+    parser.add_argument("--integrate-agents", action="store_true",
+                        help="Append managed CLI guidance to existing root AGENTS.md without replacing its rules")
     parser.add_argument("--dry-run", action="store_true", help="Plan changes without writing to the project")
     parser.add_argument("--ref", default="main", help="Source revision: main or a full immutable Git commit SHA")
     parser.add_argument("--json", action="store_true", help="Return result as JSON")
     args = parser.parse_args()
     try:
-        outcome = install(args.target, force=args.force, dry_run=args.dry_run, revision=args.ref)
+        outcome = install(args.target, force=args.force, dry_run=args.dry_run,
+                          revision=args.ref, integrate_agents=args.integrate_agents)
         if args.json:
             sys.stdout.write(json.dumps(outcome, ensure_ascii=False) + "\n")
         elif args.dry_run:
@@ -295,6 +346,11 @@ def main() -> int:
         else:
             sys.stdout.write(f"Agent CLI ready: python {outcome['entrypoint']} sys-info --json\n")
             sys.stdout.write(f"Created {len(outcome['created'])}, overwritten {len(outcome['overwritten'])}, skipped {len(outcome['skipped'])}\n")
+        if not args.json:
+            if outcome["guidance_state"] == "existing_preserved":
+                sys.stdout.write("Existing AGENTS.md preserved. To link project CLI guidance, review and use --integrate-agents.\n")
+            if outcome["codex_override_present"]:
+                sys.stdout.write("Note: root AGENTS.override.md exists; Codex may load it instead of AGENTS.md. Review separately.\n")
         return 0
     except (OSError, ValueError, RuntimeError, UnicodeError, urllib.error.URLError,
             subprocess.SubprocessError) as exc:
