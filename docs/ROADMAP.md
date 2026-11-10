@@ -2,14 +2,15 @@
 
 This public roadmap separates existing behavior from prospective improvements.
 
-## Available now
+## Available now (v1.2)
 
 - Cross-platform zero-dependency installer with `manage.py` conflict handling.
+- Installer `--dry-run` preview, commit-SHA `--ref` source pinning, symlink checks and best-effort transactional rollback of its own writes.
 - Safe command discovery (exception isolation, not untrusted-code sandboxing).
 - Bounded JSON output and optional memory telemetry.
 - CLI scaffolding, AST checks, documentation generation and integration tests.
 - Read-only shallow project stack discovery and human-guided onboarding.
-- Versionable procedural notes, with a privacy-first Post-Task Audit.
+- Versionable procedural notes with an evidence-first, privacy-aware Post-Task Audit and documented limits.
 
 ## Candidates, not shipped features
 
@@ -17,7 +18,8 @@ This public roadmap separates existing behavior from prospective improvements.
 - Atomic state writes (`os.replace`) and locking where multi-writer coordination is needed.
 - Structured checkpoint expiry and safe recovery contracts for long-running tasks.
 - More stringent source-inspection checks and opt-in policy validation.
-- Packaging/release pinning and integrity verification for downloaded installer assets.
+- Signed release/artifact verification, beyond immutable Git SHA source references.
+- Journal-based crash recovery if the installer process is forcibly terminated during an update.
 - Cross-platform integration tests for unusual encodings, filesystem permissions and paths.
 
 **Scope:** No browser-session management, proxy rotation, broad process termination, filesystem deletion, or production repair is part of the universal starter. Those require a separate, explicitly authorized project-specific implementation.

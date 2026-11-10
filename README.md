@@ -33,6 +33,30 @@ From a cloned checkout (offline, local template):
 python setup_starter_kit.py --target /path/to/project
 ```
 
+## Safer install and update (v1.2)
+
+**Inspect first, without writing anything:**
+
+```bash
+python setup_starter_kit.py --target /path/to/project --dry-run --json
+```
+
+Or via the shell installer (in the target project directory):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ruslanudintsev-ai/agent-cli-starter/main/install.sh | bash -s -- --dry-run --json
+```
+
+**Pin every downloaded component to a reviewed commit:** replace `FULL_40_CHARACTER_COMMIT_SHA` below with the verified 40-character SHA of a reviewed GitHub commit (not a tag or branch):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ruslanudintsev-ai/agent-cli-starter/FULL_40_CHARACTER_COMMIT_SHA/install.sh | bash -s -- --ref FULL_40_CHARACTER_COMMIT_SHA
+```
+
+The shell installer obtains its Python installer from the same SHA; that installer downloads template files from the same SHA. The quick-install `main` URL is convenient but mutable. Verify/trust upstream code before executing a network script. `--ref` does not provide independent signature verification.
+
+The Python installer supports `--force` to replace starter-owned files, `--dry-run` for a non-writing plan, and `--ref` for a commit SHA. Never replace foreign entrypoints. Installation attempts to roll back **its own file writes** if a step fails, including failed documentation generation, but it cannot reverse side effects from arbitrary third-party plugins imported by the target CLI, or recover from power loss/forced termination at every point. Back up valuable projects before `--force`.
+
 ## Usage
 
 ```bash
@@ -69,6 +93,7 @@ python agent_cli.py sys-info --json
 - [Engineering manifesto](docs/MANIFESTO.md) — bounded context, durable commands, verified procedural memory and responsible autonomy.
 - [Project adaptation loop](docs/PROJECT_ADAPTATION.md) — read-only project discovery, opt-in tool expansion and privacy boundaries.
 - [Roadmap](docs/ROADMAP.md) — shipped behavior versus ideas that still need implementation.
+- [Procedural memory protocol](docs/PROCEDURAL_MEMORY.md) — verified lessons, review scope, privacy and limits.
 
 The template includes a first-use `.agents/rules/agent-onboarding.md` instruction. In a new project run `project-scan`, inspect the output and implement only the commands justified by an actual task. The scanner is shallow, deliberately avoids `.env` and private directories, and never runs user code.
 
@@ -90,15 +115,18 @@ This repository contains only generic, publication-safe source, instructions and
 
 - Uses only Python standard-library modules; `psutil` is optional.
 - From a checkout it uses local `template/`; from a downloaded standalone installer it fetches template files from this repository over HTTPS.
-- Pre-fetches all source files before changing any project file.
+- Pre-fetches all source files and validates target paths before changing project files; refuses symlink destinations.
+- `--dry-run` lists planned creates, overwrites and skips without touching the destination.
+- `--ref <full-Git-commit-SHA>` pins fetched installer/templates; the default `main` is mutable.
+- A normal installation snapshots files it will change and restores them on an observed failure. Rollback does not cover third-party side effects, abrupt termination or a changed target from another concurrent process.
 - Skips existing files without `--force` and idempotently appends `.cle_state/`, `.cle_cache/` and `__pycache__/` to `.gitignore`.
 - Generates `SKILL.md` immediately; on later installs, when an existing `SKILL.md` is preserved, runs doc generation in dry-run mode instead of overwriting it.
-- **Heads-up:** in a project that already uses `core/commands`, non-overwrite mode may leave collisions. Review `skipped` in the installer JSON, and resolve manually before relying on the CLI. Take backups before using `--force`.
+- **Heads-up:** in a project that already uses `core/commands`, non-overwrite mode may leave collisions. Review `skipped` in the installer JSON, and resolve manually before relying on the CLI. Take backups before using `--force`; this is not a fully isolated plugin sandbox.
 - The CLI's plugin import error isolation does **not** prevent filesystem/network side effects from untrusted plugins. Only install trusted code.
 
 ## Developing commands
 
-Create a persistent command with `dev-scaffold`, implement `run()` to return a JSON-compatible dictionary, add tests, run `dev-validate`, and regenerate docs. The generated `SKILL.md` is versionable. Append only **verified** incident details to `gotchas.md` and never include secrets.
+Create a persistent command with `dev-scaffold`, implement `run()` to return a JSON-compatible dictionary, add tests, run `dev-validate`, and regenerate docs. The generated `SKILL.md` is versionable. Append only **verified** and scoped incident details to `gotchas.md` and never include secrets; see [Procedural memory](docs/PROCEDURAL_MEMORY.md).
 
 ## Testing
 
