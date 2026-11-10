@@ -69,7 +69,7 @@ class InstallTests(unittest.TestCase):
             root = Path(folder)
             existing = "# a Django manage.py\nprint('stay')\n"
             (root / "manage.py").write_text(existing, encoding="utf-8")
-            result = invoke(str(INSTALLER), "--json", cwd=root)
+            result = invoke(str(INSTALLER), "--layout", "flat", "--json", cwd=root)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)["entrypoint"], "agent_cli.py")
             self.assertEqual((root / "manage.py").read_text(encoding="utf-8"), existing)
@@ -161,7 +161,7 @@ class InstallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / "manage.py").write_text("# existing Django manage\n", encoding="utf-8")
-            self.assertEqual(invoke(str(INSTALLER), cwd=root).returncode, 0)
+            self.assertEqual(invoke(str(INSTALLER), "--layout", "flat", cwd=root).returncode, 0)
             onboarding = (root / ".agents/rules/agent-onboarding.md").read_text(encoding="utf-8")
             self.assertIn("python agent_cli.py project-scan --json", onboarding)
             skill = (root / ".agents/skills/cli-tools/SKILL.md").read_text(encoding="utf-8")
@@ -287,7 +287,7 @@ class LargeCommand(BaseCommand):
             alternate = "# foreign agent_cli.py\n"
             (root / "manage.py").write_text(manage, encoding="utf-8")
             (root / "agent_cli.py").write_text(alternate, encoding="utf-8")
-            result = invoke(str(INSTALLER), "--force", "--json", cwd=root)
+            result = invoke(str(INSTALLER), "--force", "--layout", "flat", "--json", cwd=root)
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual((root / "manage.py").read_text(encoding="utf-8"), manage)
             self.assertEqual((root / "agent_cli.py").read_text(encoding="utf-8"), alternate)
