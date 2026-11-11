@@ -90,6 +90,7 @@ python agent_cli.py sys-info --json
 | Component | Contract |
 | --- | --- |
 | `BaseCommand` | Every plugin subclasses the base, declares its `argparse` options and returns a mapping. The dispatcher formats exactly one JSON response. |
+| Structured Errors | `CommandError` exposes stable `error_code`, human-readable `message` and `suggested_fix`; legacy `status: error` mappings receive a generic recovery contract. Unexpected exception text is not echoed into JSON. |
 | Output Budgeting | Maximum 50 list items or mapping keys, 5,000 characters per string, 12 nesting levels, and about 20,000 JSON characters overall. Suppresses stray plugin stdout and reports truncation. |
 | Safe Discovery | Imports every `core/commands/*.py` module independently. Broken imports, class constructors, or argument registration are reported as warnings while healthy commands continue. **Not a sandbox** for untrusted code. |
 | Telemetry | Duration is always included; process RSS is included only when optional `psutil` happens to be installed. Physical RAM uses standard-library OS fallbacks. |
@@ -109,6 +110,7 @@ python agent_cli.py sys-info --json
 - [Roadmap](docs/ROADMAP.md) — shipped behavior versus ideas that still need implementation.
 - [Procedural memory protocol](docs/PROCEDURAL_MEMORY.md) — verified lessons, review scope, privacy and limits.
 - [Reliability Core](docs/RELIABILITY.md) — scaffold is not success; failing acceptance placeholders and Grounding Proof.
+- [Structured errors](docs/ERROR_CONTRACT.md) — stable error codes, safe machine-readable recovery fields and explicitly scoped diagnostic evidence.
 
 The template includes a first-use `.agents/rules/agent-onboarding.md` instruction. In a new project run `project-scan`, inspect the output and implement only the commands justified by an actual task. The scanner is shallow, deliberately avoids `.env` and private directories, and never runs user code.
 

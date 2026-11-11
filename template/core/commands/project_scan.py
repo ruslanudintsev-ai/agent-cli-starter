@@ -13,7 +13,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from core.commands.base import BaseCommand
+from core.commands.base import BaseCommand, CommandError
 
 MAX_MANIFEST_BYTES = 64 * 1024
 PYTHON_MARKERS = ("pyproject.toml", "requirements.txt", "Pipfile", "setup.cfg", "setup.py")
@@ -45,7 +45,11 @@ class ProjectScanCommand(BaseCommand):
     def run(self, args: argparse.Namespace) -> Mapping[str, Any]:
         root = Path(args.root).expanduser().resolve()
         if not root.is_dir():
-            return {"status": "error", "message": "--root must identify an existing directory"}
+            raise CommandError(
+                "--root must identify an existing directory",
+                error_code="INVALID_PROJECT_ROOT",
+                suggested_fix="Choose an existing project directory and rerun project-scan --root <directory>.",
+            )
 
         stacks: set[str] = set()
         proposed: set[str] = set()

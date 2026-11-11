@@ -53,6 +53,15 @@ class InstallTests(unittest.TestCase):
         self.assertIn("template/", installation)
         self.assertIn("your-project", installation)
 
+    def test_structured_error_contract_is_documented(self) -> None:
+        docs = (REPO / "docs/ERROR_CONTRACT.md").read_text(encoding="utf-8")
+        cli = (REPO / "README.md").read_text(encoding="utf-8")
+        rules = (REPO / "template/.agents/rules/command-authoring.md").read_text(encoding="utf-8")
+        for token in ("CommandError", "error_code", "suggested_fix", "UNEXPECTED_ERROR"):
+            self.assertIn(token, docs)
+        self.assertIn("docs/ERROR_CONTRACT.md", cli)
+        self.assertIn("raise CommandError", rules)
+
     def test_install_and_json_arguments(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
