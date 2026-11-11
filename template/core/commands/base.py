@@ -46,7 +46,7 @@ class CommandError(Exception):
     bounds their size but cannot determine what information is confidential.
     """
 
-    _CODE = re.compile(r"[A-Z][A-Z0-9_]{2,63}\\Z".replace("\\\\", "\\"))
+    _CODE = re.compile(r"[A-Z][A-Z0-9_]{2,63}\Z")
 
     def __init__(self, message: str, *, error_code: str = "COMMAND_ERROR",
                  suggested_fix: str = "Review the command's inputs and retry.",
@@ -131,15 +131,18 @@ class BaseCommand(abc.ABC):
         """Keep existing command error details while adding stable recovery fields."""
         if data.get("status") != "error":
             return data
-        return {
+        normalized: dict[str, Any] = {
             "status": "error",
             "error_code": data.get("error_code") or "COMMAND_REPORTED_ERROR",
             "message": data.get("message") or "The command reported an error.",
             "suggested_fix": data.get("suggested_fix") or (
                 "Inspect the command's error details, fix the cause, and rerun the relevant check."
             ),
-            **data,
         }
+        for key, value in data.items():
+            if key not in normalized:
+                normalized[key] = value
+        return normalized
 
     @staticmethod
     def _memory_mb() -> float | None:
