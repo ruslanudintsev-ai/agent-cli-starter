@@ -119,6 +119,43 @@ class InstallTests(unittest.TestCase):
             self.assertNotEqual(validation.returncode, 0)
             self.assertTrue(json.loads(validation.stdout)["result"]["errors"])
 
+    def test_validator_accepts_executable_utf8_bom_source_but_still_rejects_syntax_errors(self) -> None:
+        """Python imports BOM-prefixed modules; our AST validator must agree."""
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            setup = invoke(str(INSTALLER), cwd=root)
+            self.assertEqual(setup.returncode, 0, setup.stdout + setup.stderr)
+            cmd = root / "core/commands/bom_fixture.py"
+            module = '''import argparse
+from core.commands.base import BaseCommand
+
+class BomFixtureCommand(BaseCommand):
+    name = "bom-fixture"
+    description = "Valid BOM-prefixed Python source"
+    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
+        pass
+    def run(self, args: argparse.Namespace):
+        return {"status": "ok", "observed": True}
+'''
+            cmd.write_bytes(b"\xef\xbb\xbf" + module.encode("utf-8"))
+            executed = invoke("manage.py", "bom-fixture", "--json", cwd=root)
+            self.assertEqual(executed.returncode, 0, executed.stdout + executed.stderr)
+            self.assertTrue(json.loads(executed.stdout)["result"]["observed"])
+            checked = invoke("manage.py", "dev-validate", "--file",
+                             "core/commands/bom_fixture.py", "--json", cwd=root)
+            self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
+            result = json.loads(checked.stdout)["result"]
+            self.assertTrue(result["valid"])
+            self.assertFalse(result["behavior_verified"])
+
+            invalid = root / "core/commands/bom_invalid.py"
+            invalid.write_bytes(b"\xef\xbb\xbf" + b"def broken(:\n")
+            rejected = invoke("manage.py", "dev-validate", "--file",
+                              "core/commands/bom_invalid.py", "--json", cwd=root)
+            self.assertNotEqual(rejected.returncode, 0)
+            errors = json.loads(rejected.stdout)["result"]["errors"]
+            self.assertTrue(any("Syntax/encoding error" in line for line in errors))
+
     def test_scaffold_validation_and_auto_doc(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
