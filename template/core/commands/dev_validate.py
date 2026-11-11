@@ -28,7 +28,7 @@ class DevValidateCommand(BaseCommand):
         if path.suffix != ".py" or not path.is_file():
             return {"status": "error", "errors": ["Not an existing Python file"]}
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            tree = ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(path))
         except (SyntaxError, UnicodeError) as exc:
             return {"status": "error", "errors": [f"Syntax/encoding error: {exc}"]}
         errors: list[str] = []
