@@ -21,6 +21,7 @@ This public roadmap separates existing behavior from prospective improvements.
 - Signed release/artifact verification, beyond immutable Git SHA source references.
 - Journal-based crash recovery if the installer process is forcibly terminated during an update.
 - Cross-platform integration tests for unusual encodings, filesystem permissions and paths.
+- Crash-safe multi-file restore with strong concurrency control. The single-file guidance snapshot tool uses an observed-state digest and atomic replacement only; it is not a general transactional rollback mechanism.
 
 **Scope:** No browser-session management, proxy rotation, broad process termination, filesystem deletion, or production repair is part of the universal starter. Those require a separate, explicitly authorized project-specific implementation.
 

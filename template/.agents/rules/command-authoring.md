@@ -16,4 +16,6 @@ description: Reusable command development contract, validation and safety gate
 
 9. When a reviewer supplies an independently checked acceptance manifest and pinned SHA-256, run `verify-acceptance --manifest <file> --sha256 <digest> --execute --json` in an isolated trusted test checkout. A generated unit test is not an independent oracle. This runner executes trusted project CLI code and is NOT a security sandbox.
 
+10. For a reviewed agent-instruction file, `config-snapshot --action create --file AGENTS.md` makes a private, short-lived snapshot. `--action restore --id ...` previews only; `--apply --confirm <current-preview-digest>` modifies **one existing allowlisted guidance file** after explicit authorization and a fresh check. Never snapshot secrets, .env files, project databases, or arbitrary application code. The snapshot store is plain-text base64, not encryption; it must remain local and ignored by Git.
+
 These are instructions for cooperating agents, not a hard enforcement or a substitute for project-specific safety rules.
