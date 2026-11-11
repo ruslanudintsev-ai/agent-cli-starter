@@ -44,6 +44,7 @@ TEMPLATE_FILES = (
     "core/commands/__init__.py",
     "core/commands/base.py",
     "core/commands/sys_info.py",
+    "core/commands/service_health.py",
     "core/commands/system_docgen.py",
     "core/commands/dev_scaffold.py",
     "core/commands/project_scan.py",

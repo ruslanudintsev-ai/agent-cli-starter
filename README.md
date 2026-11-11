@@ -68,6 +68,8 @@ To update a previous installation, review the upstream changes, make a destinati
 
 ```bash
 python manage.py sys-info --json
+python manage.py service-health --json
+python manage.py service-health --component commands --dry-run --json
 python manage.py project-scan --json
 python manage.py checkpoints --json
 python manage.py checkpoints --action prune --json  # preview only
@@ -91,6 +93,7 @@ python agent_cli.py sys-info --json
 | --- | --- |
 | `BaseCommand` | Every plugin subclasses the base, declares its `argparse` options and returns a mapping. The dispatcher formats exactly one JSON response. |
 | Structured Errors | `CommandError` exposes stable `error_code`, human-readable `message` and `suggested_fix`; legacy `status: error` mappings receive a generic recovery contract. Unexpected exception text is not echoed into JSON. |
+| Local Service Health | `service-health` checks Python version, free disk, project guidance and registered CLI commands without repair, networking or application process inspection; failed checks return non-zero with evidence. |
 | Output Budgeting | Maximum 50 list items or mapping keys, 5,000 characters per string, 12 nesting levels, and about 20,000 JSON characters overall. Suppresses stray plugin stdout and reports truncation. |
 | Safe Discovery | Imports every `core/commands/*.py` module independently. Broken imports, class constructors, or argument registration are reported as warnings while healthy commands continue. **Not a sandbox** for untrusted code. |
 | Telemetry | Duration is always included; process RSS is included only when optional `psutil` happens to be installed. Physical RAM uses standard-library OS fallbacks. |
