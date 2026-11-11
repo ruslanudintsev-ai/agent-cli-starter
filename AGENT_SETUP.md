@@ -1,6 +1,6 @@
 # Agent CLI Starter — universal agent installation contract
 
-This is the **canonical instruction for any coding agent** that is asked to install Agent CLI Starter in another repository. The system has **one installer, one set of project skills, one CLI and one verification protocol**. It does not depend on any model/provider or a specific coding-agent product.
+This is the **canonical instruction for any coding agent** that is asked to install Agent CLI Starter in another repository. Begin with [INSTALL.md](INSTALL.md): **clone the starter repository, then copy/configure its template files into the destination project root using the included local installer**. The system has **one installer, one set of project skills, one CLI and one verification protocol**. It does not depend on any model/provider or a specific coding-agent product.
 
 ## Interpret the request
 
@@ -11,7 +11,7 @@ Read the destination project's current instructions and Git workflow **before wr
 ## One deterministic workflow
 
 1. **Discover.** Identify the trusted source revision and the destination checkout root. Inspect the destination `AGENTS.md`, existing `.agents/` content, `manage.py`, `agent_cli.py`, `core/`, `.gitignore`, and any instruction overrides that your agent actually uses. If the project already includes this CLI, do not install another copy.
-2. **Inspect code.** Obtain a reviewed checkout of this repository. Prefer a pinned, reviewed revision; do not execute uninspected `curl | bash`, Python `exec`, arbitrary project code or remote scripts.
+2. **Clone and inspect.** Run `git clone https://github.com/ruslanudintsev-ai/agent-cli-starter.git` outside the destination project, then `cd agent-cli-starter`. Review the source and ideally pin a known commit. **Do not copy the entire upstream repository** into the destination: the installer uses the contents of `template/`, renders placeholders and preserves application-owned files. Do not execute uninspected remote scripts.
 3. **Plan without writing.** The common installer chooses `--layout auto`: for an occupied project it places the runtime in `tools/agent-cli-starter/` while keeping rules and skills in the project root. From the *starter source checkout*, run:
 
    ```bash
