@@ -35,6 +35,10 @@ The agent retains *operational knowledge*, not hidden thoughts or unfiltered log
 
 Use `python __ENTRYPOINT__ verify-acceptance --manifest <reviewed-json> --sha256 <reviewer-pinned-digest> --execute --json` only on trusted project code, approved fixtures and a controlled environment. The verifier requires both positive and negative cases; it refuses unpinned/mutated fixtures and does not emit raw subprocess logs. It is **not** a security sandbox or a guarantee the criteria are truthful. A model must not choose its own easy oracle and then call that independent proof. Keep manifest and digest under reviewer control; `VERIFIED` is scoped to the specified criteria and revision.
 
+## Before editing project instructions
+
+If a reviewed change to an allowlisted guidance file could need reversal, create a project-local snapshot first. `config-snapshot` supports one file at a time: snapshot, preview restore, then separately authorize the exact `--apply --confirm` digest. A snapshot is not approval to change the instruction file or to restore it. Check for concurrent edits and re-preview if the file changed. Never publish checkpoint contents; they are base64/plaintext, not encrypted.
+
 ## Privacy boundary
 
 - A destination project's `gotchas.md` can contain sensitive operational context and is **not** automatically suitable for public GitHub.

@@ -49,6 +49,7 @@ TEMPLATE_FILES = (
     "core/commands/dev_scaffold.py",
     "core/commands/project_scan.py",
     "core/commands/checkpoints.py",
+    "core/commands/config_snapshot.py",
     "core/commands/dev_validate.py",
     "core/commands/verify_acceptance.py",
     "manage.py",

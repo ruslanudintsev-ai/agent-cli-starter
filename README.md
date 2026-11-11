@@ -72,7 +72,10 @@ python manage.py service-health --json
 python manage.py service-health --component commands --dry-run --json
 python manage.py project-scan --json
 python manage.py checkpoints --json
-python manage.py checkpoints --action prune --json  # preview only
+python manage.py checkpoints --action prune --json
+python manage.py config-snapshot --action list --json
+python manage.py config-snapshot --action create --file AGENTS.md --json
+python manage.py config-snapshot --action restore --id cfg-REPLACE_WITH_ID --json  # preview only
 python manage.py --json sys-info --details
 python manage.py dev-scaffold --command cache-clear --json
 python manage.py dev-validate --file core/commands/cache_clear.py --json
@@ -100,6 +103,7 @@ python agent_cli.py sys-info --json
 | Doc Sync | `system-docgen` inspects registered `argparse` subparsers and generates `SKILL.md` including argument tables. |
 | Optional Assertions | Plugins may return bounded, read-only `post_execution_assertions` warnings. No global system checks run by default. |
 | Checkpoints | Project-local bounded atomic JSON with TTL and cooperative locks; `checkpoints` lists metadata or explicitly prunes expired entries. |
+| Guidance Snapshots | `config-snapshot` stores one allowlisted agent-instruction file privately with a seven-day expiry. Restore is preview-only unless explicitly authorized with `--apply` and an exact current-state digest. It does not replace project rollback or change production. |
 | Project Adaptation | `project-scan` detects common top-level stack markers without running project code or exposing manifest content. It proposes command names for deliberate implementation; it does **not** install or execute them. |
 | Scaffold/Validation | `dev-scaffold` creates a persistent command and `unittest`; `dev-validate` checks AST for direct `print()` and inheritance. It is a linting aid, not a complete code safety proof. |
 | Procedural Memory | `gotchas.md` stores verified environment findings. `self-learning.md` establishes a Post-Task Audit and doc update ritual; agents must actually follow it. |
@@ -114,6 +118,7 @@ python agent_cli.py sys-info --json
 - [Procedural memory protocol](docs/PROCEDURAL_MEMORY.md) — verified lessons, review scope, privacy and limits.
 - [Reliability Core](docs/RELIABILITY.md) — scaffold is not success; failing acceptance placeholders and Grounding Proof.
 - [Structured errors](docs/ERROR_CONTRACT.md) — stable error codes, safe machine-readable recovery fields and explicitly scoped diagnostic evidence.
+- [Agent guidance snapshots](docs/CONFIG_SNAPSHOTS.md) — bounded, one-file snapshots and confirmed restoration with an undo snapshot.
 
 The template includes a first-use `.agents/rules/agent-onboarding.md` instruction. In a new project run `project-scan`, inspect the output and implement only the commands justified by an actual task. The scanner is shallow, deliberately avoids `.env` and private directories, and never runs user code.
 
