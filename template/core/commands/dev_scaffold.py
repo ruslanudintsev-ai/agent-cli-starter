@@ -55,7 +55,8 @@ class {classname}(BaseCommand):
     def run(self, args: argparse.Namespace) -> Mapping[str, Any]:
         # Never report a successful *feature* before domain behavior is implemented.
         return {{"status": "error", "error_code": "NOT_IMPLEMENTED",
-                 "message": "Scaffold only: implement the behavior and acceptance criteria"}}
+                 "message": "Scaffold only: implement the behavior and acceptance criteria",
+                 "suggested_fix": "Implement run() and pass independent positive and negative behavior tests."}}
 '''
         test_code = f'''"""Acceptance tests for {name}: deliberately red until behavior exists."""
 

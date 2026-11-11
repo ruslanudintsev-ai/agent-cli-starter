@@ -52,7 +52,8 @@ def discover_commands() -> tuple[dict[str, BaseCommand], list[str]]:
                         raise ValueError(f"Duplicate command name: {command.name}")
                     commands[command.name] = command
         except Exception as exc:
-            warnings.append(f"{info.name}: {type(exc).__name__}: {str(exc)[:300]}")
+            # Plugin exception messages may contain secrets or absolute paths.
+            warnings.append(f"{info.name}: {type(exc).__name__} (import unavailable)")
     return commands, warnings
 
 
@@ -74,7 +75,7 @@ def make_parser() -> tuple[argparse.ArgumentParser, dict[str, BaseCommand],
             configured[name] = sub
         except Exception as exc:
             subparsers.choices.pop(name, None)
-            warnings.append(f"{name}: argparse setup failed: {type(exc).__name__}: {str(exc)[:300]}")
+            warnings.append(f"{name}: argparse setup failed: {type(exc).__name__}")
     return parser, registered, configured, warnings
 
 

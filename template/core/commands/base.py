@@ -7,6 +7,7 @@ import argparse
 import contextlib
 import io
 import json
+import re
 import sys
 import time
 from collections.abc import Mapping
@@ -36,6 +37,42 @@ class _BoundedWriter(io.TextIOBase):
 
     def getvalue(self) -> str:
         return "".join(self.parts)
+
+
+class CommandError(Exception):
+    """Expected, agent-actionable command failure with machine-readable fields.
+
+    Only include sanitized, non-secret messages and details here; the dispatcher
+    bounds their size but cannot determine what information is confidential.
+    """
+
+    _CODE = re.compile(r"[A-Z][A-Z0-9_]{2,63}\Z")
+
+    def __init__(self, message: str, *, error_code: str = "COMMAND_ERROR",
+                 suggested_fix: str = "Review the command's inputs and retry.",
+                 details: Mapping[str, Any] | None = None) -> None:
+        if not isinstance(error_code, str) or not self._CODE.fullmatch(error_code):
+            raise ValueError("error_code must be an uppercase stable identifier")
+        if not isinstance(message, str) or not isinstance(suggested_fix, str):
+            raise TypeError("message and suggested_fix must be strings")
+        if details is not None and not isinstance(details, Mapping):
+            raise TypeError("details must be a mapping")
+        super().__init__(message)
+        self.error_code = error_code
+        self.suggested_fix = suggested_fix
+        self.details = dict(details) if details is not None else None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Preserve a stable envelope; only use details intentionally supplied."""
+        result: dict[str, Any] = {
+            "status": "error",
+            "error_code": self.error_code,
+            "message": str(self),
+            "suggested_fix": self.suggested_fix,
+        }
+        if self.details is not None:
+            result["details"] = self.details
+        return result
 
 
 class BaseCommand(abc.ABC):
@@ -90,6 +127,24 @@ class BaseCommand(abc.ABC):
         return visit(data, 0), truncated
 
     @staticmethod
+    def _normalize_command_result(data: Mapping[str, Any]) -> Mapping[str, Any]:
+        """Keep existing command error details while adding stable recovery fields."""
+        if data.get("status") != "error":
+            return data
+        normalized: dict[str, Any] = {
+            "status": "error",
+            "error_code": data.get("error_code") or "COMMAND_REPORTED_ERROR",
+            "message": data.get("message") or "The command reported an error.",
+            "suggested_fix": data.get("suggested_fix") or (
+                "Inspect the command's error details, fix the cause, and rerun the relevant check."
+            ),
+        }
+        for key, value in data.items():
+            if key not in normalized:
+                normalized[key] = value
+        return normalized
+
+    @staticmethod
     def _memory_mb() -> float | None:
         if psutil is None:
             return None
@@ -117,6 +172,7 @@ class BaseCommand(abc.ABC):
                 data = self.run(args)
                 if not isinstance(data, Mapping):
                     raise TypeError("Command.run() must return a mapping")
+                data = self._normalize_command_result(data)
                 try:
                     proposed_checks = self.post_execution_assertions(args, data)
                     if not isinstance(proposed_checks, list) or not all(isinstance(v, Mapping) for v in proposed_checks):
@@ -128,10 +184,23 @@ class BaseCommand(abc.ABC):
             status = str(data.get("status", "ok"))
             exit_code = 0 if status == "ok" else 1
             clean, count = self._apply_output_budgets(data)
-        except Exception as exc:  # Never leave the agent without a parsable response.
-            clean, count, exit_code = {
-                "status": "error", "error_type": type(exc).__name__, "message": str(exc)
-            }, 0, 1
+        except CommandError as exc:
+            # Expected errors carry an actionable, sanitized recovery contract.
+            clean, count = self._apply_output_budgets(exc.to_dict())
+            exit_code = 1
+        except Exception as exc:
+            # Unanticipated exception text may contain secrets, local paths, or tokens.
+            # Return only a diagnostic *type*; detailed debugging stays in private logs.
+            clean, count = self._apply_output_budgets({
+                "status": "error",
+                "error_code": "UNEXPECTED_ERROR",
+                "message": "The command failed unexpectedly.",
+                "suggested_fix": (
+                    "Check the command implementation and run focused tests in a trusted environment."
+                ),
+                "error_type": type(exc).__name__,
+            })
+            exit_code = 1
         telemetry = {
             "duration_ms": round((time.perf_counter() - started) * 1000, 2),
             "process_rss_mb": self._memory_mb(),
