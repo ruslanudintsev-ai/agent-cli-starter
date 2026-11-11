@@ -9,13 +9,26 @@
 
 Instead of writing `temp.py`, `script_v1.py` and dumping unlimited logs into a model context, agents can extend a reusable Python CLI with explicit parameters, bounded JSON results, tests, and persistent operational notes.
 
-## Install into an existing project — any coding agent
+## Install — clone and copy into your project
 
-**Start with the [universal agent setup contract](AGENT_SETUP.md).** It is the single source of truth for installation, discovery and verification regardless of Codex, Kilo, Cursor, Claude Code, Aider or other agents.
+**Start here: [Installation — Clone, Copy, Verify](INSTALL.md).** This is the primary installation guide for all coding agents and operating systems.
 
-Install into the **destination project root**, not a nested `.agents/agent-cli-starter` directory. From a reviewed starter checkout, preview `python setup_starter_kit.py --target /path/to/project --integrate-agents --dry-run --json`, inspect every planned create/overwrite/skip, then apply without `--dry-run` only where the destination project's branch/PR rules allow it. Run the reported CLI entrypoint and verify output. Report actual state (`PLANNED`, `INSTALLED`, `AGENT_VERIFIED`, `BLOCKED`) and evidence.
+```bash
+git clone https://github.com/ruslanudintsev-ai/agent-cli-starter.git
+cd agent-cli-starter
 
-Existing project instructions are preserved. With `--integrate-agents`, a small managed reference is appended to an existing `AGENTS.md` without discarding its rules. Agent-specific overrides and discovery can vary: merely installing files does not prove any given agent has read them. See optional [agent compatibility notes](docs/CODEX.md) and [Kilo smoke test](docs/KILO_CODE.md) as examples, not alternate installers.
+# Preview the files to be copied into the destination project root.
+python setup_starter_kit.py --target ../your-project --layout auto --integrate-agents --dry-run --json
+
+# Copy and configure the starter files, without copying the starter Git repository.
+python setup_starter_kit.py --target ../your-project --layout auto --integrate-agents --json
+```
+
+Replace `../your-project` with the actual destination root. The command uses the cloned repository's **`template/` files** and installs `AGENTS.md`, `.agents/`, and the CLI into the destination project layout. For an empty project, the CLI can be installed directly at its root; for an occupied project, `--layout auto` isolates the runtime in `tools/agent-cli-starter/` to preserve existing application files.
+
+The installer reports the precise `entrypoint`. From the destination project root, verify the CLI with `python <entrypoint> sys-info --json` and `python <entrypoint> project-scan --json`, then restart/reload your coding agent if required. **Do not simply copy the raw `template/` files**: their placeholders must be rendered first. No `pip install` step is needed.
+
+The [universal agent setup contract](AGENT_SETUP.md) explains agent discovery, acceptance evidence and the destination repository's branch/PR workflow. Existing project instructions remain authoritative.
 
 ## Universal installation layout
 
@@ -43,53 +56,13 @@ python tools/agent-cli-starter/manage.py project-scan --json
 
 The application's own `manage.py`, `src/`, `core/` and tests remain untouched. An unrelated existing `tools/agent-cli-starter/` tree is an installation error even with `--force`. Read the [universal layout contract](docs/INSTALL_LAYOUTS.md).
 
-## Quick install
+## Additional installation options
 
-Open a terminal in the **target project directory** (not this starter repository).
+The **recommended method is to clone the repository and use its local installer**, as shown in [INSTALL.md](INSTALL.md). This allows source review and avoids executing a remotely downloaded script.
 
-Linux, macOS, WSL, Git Bash:
+The installer also supports `--layout flat` for a brand-new, otherwise empty project and `--layout isolated` for explicitly namespaced runtime files. Use `--dry-run --json` first, and inspect `created`, `skipped`, and `planned_overwritten` before changing an existing codebase.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/ruslanudintsev-ai/agent-cli-starter/main/install.sh | bash
-```
-
-Windows PowerShell, with Python 3.10+ installed:
-
-```powershell
-python -c "import urllib.request; exec(compile(urllib.request.urlopen('https://raw.githubusercontent.com/ruslanudintsev-ai/agent-cli-starter/main/setup_starter_kit.py').read(), '<installer>', 'exec'))" 
-```
-
-**PowerShell note:** the remote installer is loaded in the current process and writes the project files to the current directory. To inspect it first, download `setup_starter_kit.py` and run `python setup_starter_kit.py` directly. Executing scripts over HTTPS means trusting the remote code; for sensitive projects, inspect and pin a reviewed release commit.
-
-From a cloned checkout (offline, local template):
-
-```bash
-python setup_starter_kit.py --target /path/to/project
-```
-
-## Safer install and update (v1.2)
-
-**Inspect first, without writing anything:**
-
-```bash
-python setup_starter_kit.py --target /path/to/project --dry-run --json
-```
-
-Or via the shell installer (in the target project directory):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ruslanudintsev-ai/agent-cli-starter/main/install.sh | bash -s -- --dry-run --json
-```
-
-**Pin every downloaded component to a reviewed commit:** replace `FULL_40_CHARACTER_COMMIT_SHA` below with the verified 40-character SHA of a reviewed GitHub commit (not a tag or branch):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ruslanudintsev-ai/agent-cli-starter/FULL_40_CHARACTER_COMMIT_SHA/install.sh | bash -s -- --ref FULL_40_CHARACTER_COMMIT_SHA
-```
-
-The shell installer obtains its Python installer from the same SHA; that installer downloads template files from the same SHA. The quick-install `main` URL is convenient but mutable. Verify/trust upstream code before executing a network script. `--ref` does not provide independent signature verification.
-
-The Python installer supports `--force` to replace starter-owned files (never an existing `AGENTS.md`), `--integrate-agents` for optional safe guidance integration, `--dry-run` for a non-writing plan, and `--ref` for a commit SHA. Never replace foreign entrypoints. Installation attempts to roll back **its own file writes** if a step fails, including failed documentation generation, but it cannot reverse side effects from arbitrary third-party plugins imported by the target CLI, or recover from power loss/forced termination at every point. Back up valuable projects before `--force`.
+To update a previous installation, review the upstream changes, make a destination-project backup, and rerun the same installer. Files belonging to the project, including existing `AGENTS.md`, are preserved by default. `--force` should be limited to reviewed starter-owned files; it is not a solution to unknown path conflicts.
 
 ## Usage
 

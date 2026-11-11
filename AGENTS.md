@@ -2,7 +2,7 @@
 
 This repository is the **shared source and installer**, not a destination project.
 
-**Canonical instructions for all coding agents:** read [AGENT_SETUP.md](AGENT_SETUP.md), `README.md`, and `setup_starter_kit.py` before installing in another repository. Do not invent a nested `.agents/agent-cli-starter` layout or a new installer per agent. Identify the real destination root, respect its existing project rules and Git branch/PR workflow, and use the reviewed installer with `--layout auto --dry-run` before applying. Occupied application roots use `tools/agent-cli-starter/` for runtime code but keep agent guidance in the root.
+**Canonical instructions for all coding agents:** read [INSTALL.md](INSTALL.md), [AGENT_SETUP.md](AGENT_SETUP.md), `README.md`, and `setup_starter_kit.py` before installing in another repository. Do not invent a nested `.agents/agent-cli-starter` layout or a new installer per agent. Identify the real destination root, respect its existing project rules and Git branch/PR workflow, and use the reviewed installer with `--layout auto --dry-run` before applying. Occupied application roots use `tools/agent-cli-starter/` for runtime code but keep agent guidance in the root.
 
 If the destination has an `AGENTS.md`, preserve it and use `--integrate-agents` only after inspecting the resulting changes. Follow the documented cross-agent verification protocol: file placement and CLI execution are not proof of automatic instruction discovery or feature correctness.
 

@@ -38,6 +38,21 @@ class InstallTests(unittest.TestCase):
         self.assertIn("vendor-independent", project_rules)
         self.assertNotIn("docs/CODEX.md", root_rules)
 
+    def test_clone_copy_install_docs_match_supported_flags(self) -> None:
+        installation = (REPO / "INSTALL.md").read_text(encoding="utf-8")
+        readme = (REPO / "README.md").read_text(encoding="utf-8")
+        source_rules = (REPO / "AGENT_SETUP.md").read_text(encoding="utf-8")
+        for required in ("git clone https://github.com/ruslanudintsev-ai/agent-cli-starter.git",
+                         "setup_starter_kit.py", "--target", "--layout auto",
+                         "--integrate-agents", "--dry-run", "--json",
+                         "FILES_INSTALLED", "AGENT_VERIFIED", "AGENTS.md",
+                         "tools/agent-cli-starter/manage.py"):
+            self.assertIn(required, installation)
+        self.assertIn("INSTALL.md", readme)
+        self.assertIn("INSTALL.md", source_rules)
+        self.assertIn("template/", installation)
+        self.assertIn("your-project", installation)
+
     def test_install_and_json_arguments(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
