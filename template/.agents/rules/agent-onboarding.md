@@ -8,7 +8,7 @@ description: Read-only stack discovery and deliberate CLI adaptation on first pr
 When entering a new project, or when its stack materially changes:
 
 1. Read the existing project instructions before acting. **Never replace established conventions or safety controls.**
-2. Run `python __ENTRYPOINT__ project-scan --json` for a shallow, read-only overview.
+2. Run `python __ENTRYPOINT__ service-health --json` to inspect basic local CLI readiness, then `python __ENTRYPOINT__ project-scan --json` for a shallow, read-only stack overview. Health checks do not certify application or production readiness.
 3. Inspect its `detected_stack`, `evidence`, and `recommended_commands` fields. Recommendations are **ideas**, not installed commands or authorization to make changes.
 4. Pick at most one or two commands that are relevant to the current user task. If a reusable command is truly needed, run `python __ENTRYPOINT__ dev-scaffold --command <name> --json`; implement it using safe project-specific APIs and tests.
 5. Validate with `python __ENTRYPOINT__ dev-validate --file __COMMANDS_DIR__/<name>.py --json`, run the project's tests, then `python __ENTRYPOINT__ system-docgen --json`.
