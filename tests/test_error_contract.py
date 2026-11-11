@@ -126,6 +126,29 @@ return {
         self.assertEqual(data["result"]["error_type"], "TypeError")
         self.assertEqual(data["result"]["error_code"], "UNEXPECTED_ERROR")
 
+    def test_discovery_and_parser_warnings_do_not_leak_exception_messages(self) -> None:
+        broken = self.root / "core/commands/broken_import.py"
+        broken.write_text('raise RuntimeError("SECRET_FROM_IMPORT")\n', encoding="utf-8")
+        parser_broken = self.root / "core/commands/broken_args.py"
+        parser_broken.write_text(
+            "from core.commands.base import BaseCommand\n"
+            "class BrokenArgsCommand(BaseCommand):\n"
+            "    name = 'broken-args'\n"
+            "    description = 'test'\n"
+            "    def configure_parser(self, parser):\n"
+            "        raise RuntimeError('SECRET_FROM_PARSER')\n"
+            "    def run(self, args):\n"
+            "        return {'status': 'ok'}\n",
+            encoding="utf-8",
+        )
+        raw = run(self.root, "manage.py", "sys-info", "--json")
+        self.assertEqual(raw.returncode, 0, raw.stdout + raw.stderr)
+        payload = json.loads(raw.stdout)
+        self.assertTrue(any("broken_import" in item for item in payload["discovery_warnings"]))
+        self.assertTrue(any("broken-args" in item for item in payload["discovery_warnings"]))
+        self.assertNotIn("SECRET_FROM_IMPORT", raw.stdout + raw.stderr)
+        self.assertNotIn("SECRET_FROM_PARSER", raw.stdout + raw.stderr)
+
     def test_error_details_remain_bounded(self) -> None:
         self.add_command("bounded", '''
 raise CommandError(
